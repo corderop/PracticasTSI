@@ -12,16 +12,22 @@ import java.util.*;
 
 public class myAgent extends AbstractPlayer{
 
-	private PriorityQueue<Nodo> abiertos, cerrados;		// Lista de abiertos y cerrados
-	private Nodo actual;
-	private Vector2d destino;
-	private ArrayList<Vector2d> obstaculos;
+	// Lista de abiertos y cerrados
+	private PriorityQueue<Nodo> abiertos, cerrados;
 	private Queue<ACTIONS> acciones;
-	private int hola = 0;
+	// Tablero
+	// X Obstaculos
+	// Y Portales
+	// - nada
+	private char[][] tablero;
+	private Vector2d destino;
 
-	// Auxiliares
+	// Mapa
 	private Vector2d escala;
 	private Vector2d posicion;
+
+	// Pathfinding
+	private Nodo actual;
 
 	/**
 	 * initialize all variables for the agent
@@ -29,27 +35,61 @@ public class myAgent extends AbstractPlayer{
      * @param elapsedTimer Timer when the action returned is due.
 	 */
 	public myAgent(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
-		// Calculamos la escala
+
+		// DIBUJAMOS EL MAPA
+
+		// Calculamos la escala para poder obtener una cuadricula
 		this.escala = new Vector2d(stateObs.getWorldDimension().width / stateObs.getObservationGrid().length , 
         		stateObs.getWorldDimension().height / stateObs.getObservationGrid()[0].length);
+		
+		// Inicializamos tablero con todo a 0
+		int columnas = stateObs.getObservationGrid().length;
+		int filas = stateObs.getObservationGrid()[0].length;
+		tablero = new char[filas][columnas];
+		for( int i=0; i<tablero.length; i++){
+			for(int j=0; j<tablero[i].length; j++){
+				tablero[i][j] = '-';
+			}
+		}
 
 		// Obtenemos todos los portales
 		ArrayList<Observation>[] posiciones = stateObs.getPortalsPositions(stateObs.getAvatarPosition());
-        //Seleccionamos el portal mas proximo
-        this.destino = posiciones[0].get(0).position;
+
+		//Seleccionamos el portal mas proximo como destino
+		this.destino = posiciones[0].get(0).position.copy();
         this.destino.x = Math.floor(this.destino.x / this.escala.x);
         this.destino.y = Math.floor(this.destino.y / this.escala.y);
+		
+		// Dibujamos los portales
+		for(int i=0; i<posiciones[0].size(); i++){
+			int x = (int) Math.floor(posiciones[0].get(i).position.x / this.escala.x);
+			int y = (int) Math.floor(posiciones[0].get(i).position.y / this.escala.y);
+			tablero[y][x] = 'Y';
+		}
 
-		this.posicion = stateObs.getAvatarPosition();
+		// Dibujamos los obstaculos
+		posiciones = stateObs.getImmovablePositions();
+		for(int i=0; i<posiciones[0].size(); i++){
+			int x = (int) Math.floor(posiciones[0].get(i).position.x / this.escala.x);
+			int y = (int) Math.floor(posiciones[0].get(i).position.y / this.escala.y);
+			tablero[y][x] = 'X';
+		}
+
+		// Dibujamos el mapa
+		for( int i=0; i<tablero.length; i++){
+			for(int j=0; j<tablero[i].length; j++){
+				System.out.print(tablero[i][j]);
+			}
+			System.out.print('\n');
+		}
+
+
+		// Obtenemos la posicion del avatar
+		this.posicion = stateObs.getAvatarPosition().copy();
 		this.posicion.x = Math.floor(this.posicion.x / this.escala.x);
 		this.posicion.y = Math.floor(this.posicion.y / this.escala.y);
 
-		posiciones = stateObs.getImmovablePositions();
-		this.obstaculos = new ArrayList<Vector2d>();
-		for( Observation i : posiciones[0] ){
-			this.obstaculos.add(new Vector2d(Math.floor(i.position.x / this.escala.x), Math.floor(i.position.y / this.escala.y))); 
-		}
-
+		// Indicamos la orientación del avatar
 		int ori = 0;
 		Vector2d orientacion = stateObs.getAvatarOrientation();
 
@@ -62,6 +102,7 @@ public class myAgent extends AbstractPlayer{
 			if(orientacion.x == -1)		ori=2;
 		}
 
+		// Incializamos nodos para la búsqueda
 		this.actual = new Nodo((int)this.posicion.x,(int)this.posicion.y,new LinkedList<ACTIONS>(), ori, destino);
 
 		this.abiertos = new PriorityQueue<Nodo>();
@@ -81,148 +122,66 @@ public class myAgent extends AbstractPlayer{
 	@Override
 	public ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
 		if(!acciones.isEmpty()){
-			ACTIONS aaa = acciones.poll();
-			System.out.println(aaa);
-			return aaa;
-		}
-		else if(hola == 0){
-			busqueda(stateObs, elapsedTimer);
-			ACTIONS aaa = acciones.poll();
-			if(aaa != Types.ACTIONS.ACTION_NIL)
-				hola = 1;
-			System.out.println(aaa);
-			return aaa;
+			ACTIONS a = acciones.poll();
+			System.out.println(a);
+			return a;
 		}
 		else{
-			return Types.ACTIONS.ACTION_NIL;
+			busqueda(stateObs, elapsedTimer);
+			ACTIONS a = acciones.poll();
+			System.out.println(a);
+			return a;
 		}
+		// return Types.ACTIONS.ACTION_NIL;
 	}
 	
 	private void busqueda(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
 		// Obtenemos el mejor nodos de abiertos
 		actual = abiertos.poll();
 		cerrados.add(actual);
-		System.out.println("POSICión destino : " + destino + "\n");
-		System.out.print(actual);
-		// Calculamos mientras no sea nodo objetivo
-		while(!(actual.pos_x == destino.x && actual.pos_y == destino.y) && elapsedTimer.remainingTimeMillis() > 5){
+		// Calculamos mientras no sea nodo objetivo o no se hayan superado los 50 ms
+		while(tablero[actual.pos_y][actual.pos_x] != 'Y' && elapsedTimer.remainingTimeMillis() >= -8){
 
-			Nodo 	h1 = actual.siguiente(Types.ACTIONS.ACTION_UP), 
-					h2 = actual.siguiente(Types.ACTIONS.ACTION_DOWN), 
-					h3 = actual.siguiente(Types.ACTIONS.ACTION_RIGHT), 
-					h4 = actual.siguiente(Types.ACTIONS.ACTION_LEFT);
+			// Genero los 4 hijos posibles
 
-			// Procesamos el primer hijo
-			Vector2d v = new Vector2d(h1.pos_x, h1.pos_y);
-			if(!obstaculos.contains(v))
-				if(!cerrados.contains(h1)){
-					if(abiertos.contains(h1)){
-						Iterator<Nodo> it = abiertos.iterator(); 
-						Boolean igual = false;
-		
-						while (it.hasNext() && !igual){ 
-							Nodo n = it.next();
-
-							if(n.equals(h1)){
-								igual = true;
-								if(n.compareTo(h1) > 0){
-									abiertos.remove(n);
-									abiertos.add(h1);
-								}
-
-							}
-						} 
-					}
-					else
-						abiertos.add(h1);
+			if(tablero[actual.pos_y-1][actual.pos_x] != 'X'){
+				Nodo h = actual.siguiente(Types.ACTIONS.ACTION_UP);
+				if(!cerrados.contains(h)){
+					abiertos.add(h);
 				}
+			}
 
-			// Procesamos el segundo hijo
-			v = new Vector2d(h2.pos_x, h2.pos_y);
-			if(!obstaculos.contains(v))
-				if(!cerrados.contains(h2)){
-					if(abiertos.contains(h2)){
-						Iterator<Nodo> it = abiertos.iterator(); 
-						Boolean igual = false;
-		
-						while (it.hasNext() && !igual){ 
-							Nodo n = it.next();
-
-							if(n.equals(h2)){
-								igual = true;
-								if(n.compareTo(h2) > 0){
-									abiertos.remove(n);
-									abiertos.add(h2);
-								}
-
-							}
-						} 
-					}
-					else
-						abiertos.add(h2);
+			if(tablero[actual.pos_y+1][actual.pos_x] != 'X'){
+				Nodo h = actual.siguiente(Types.ACTIONS.ACTION_DOWN);
+				if(!cerrados.contains(h)){
+					abiertos.add(h);
 				}
+			}
 
-			// Procesamos el primer hijo
-			v = new Vector2d(h3.pos_x, h3.pos_y);
-			if(!obstaculos.contains(v))
-				if(!cerrados.contains(h3)){
-					if(abiertos.contains(h3)){
-						Iterator<Nodo> it = abiertos.iterator(); 
-						Boolean igual = false;
-		
-						while (it.hasNext() && !igual){ 
-							Nodo n = it.next();
-
-							if(n.equals(h3)){
-								igual = true;
-								if(n.compareTo(h3) > 0){
-									abiertos.remove(n);
-									abiertos.add(h3);
-								}
-
-							}
-						} 
-					}
-					else
-						abiertos.add(h3);
+			if(tablero[actual.pos_y][actual.pos_x+1] != 'X'){
+				Nodo h = actual.siguiente(Types.ACTIONS.ACTION_RIGHT);
+				if(!cerrados.contains(h)){
+					abiertos.add(h);
 				}
+			}
 
-			// Procesamos el cuarto hijo
-			v = new Vector2d(h4.pos_x, h4.pos_y);
-			if(!obstaculos.contains(v))
-				if(!cerrados.contains(h4)){
-					if(abiertos.contains(h4)){
-						Iterator<Nodo> it = abiertos.iterator(); 
-						Boolean igual = false;
-		
-						while (it.hasNext() && !igual){ 
-							Nodo n = it.next();
-
-							if(n.equals(h4)){
-								igual = true;
-								if(n.compareTo(h4) > 0){
-									abiertos.remove(n);
-									abiertos.add(h4);
-								}
-
-							}
-						} 
-					}
-					else
-						abiertos.add(h4);
+			if(tablero[actual.pos_y][actual.pos_x-1] != 'X'){
+				Nodo h = actual.siguiente(Types.ACTIONS.ACTION_LEFT);
+				if(!cerrados.contains(h)){
+					abiertos.add(h);
 				}
+			}
 
 			// Toma el siguiente nodo a evaluar
 			actual = abiertos.poll();
+			// Elimina todos los nodos iguales a actual (misma posición) en abiertos
+			abiertos.remove(actual);
 			cerrados.add(actual);
-			System.out.print(actual);
 		}
 
 		// Cuando encuentra nodo objetivo toma su lista de acciones para realizarlas
 		if(actual.pos_x == destino.x && actual.pos_y == destino.y)
 			acciones = actual.acts;
-		else
-			acciones.add(Types.ACTIONS.ACTION_NIL);
 	}
 
 	static class Nodo implements Comparable<Nodo>{
