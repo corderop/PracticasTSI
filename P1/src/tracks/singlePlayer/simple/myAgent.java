@@ -20,7 +20,7 @@ public class myAgent extends AbstractPlayer{
 	// Y Portales
 	// - nada
 	private char[][] tablero;
-	private Vector2d destino;
+	// private Vector2d destino;
 
 	// Mapa
 	private Vector2d escala;
@@ -28,6 +28,14 @@ public class myAgent extends AbstractPlayer{
 
 	// Pathfinding
 	private Nodo actual;
+	private ArrayList<Vector2d> diamantes;
+	
+	// Distancias óptimas entre diamantes
+	private int distancias[][];
+	private double media;
+
+	// Auxiliar
+	private int nivel = 1;
 
 	/**
 	 * initialize all variables for the agent
@@ -42,6 +50,11 @@ public class myAgent extends AbstractPlayer{
 		this.escala = new Vector2d(stateObs.getWorldDimension().width / stateObs.getObservationGrid().length , 
         		stateObs.getWorldDimension().height / stateObs.getObservationGrid()[0].length);
 		
+		// Obtenemos la posicion del avatar
+		this.posicion = stateObs.getAvatarPosition().copy();
+		this.posicion.x = Math.floor(this.posicion.x / this.escala.x);
+		this.posicion.y = Math.floor(this.posicion.y / this.escala.y);
+
 		// Inicializamos tablero con todo a 0
 		int columnas = stateObs.getObservationGrid().length;
 		int filas = stateObs.getObservationGrid()[0].length;
@@ -56,9 +69,9 @@ public class myAgent extends AbstractPlayer{
 		ArrayList<Observation>[] posiciones = stateObs.getPortalsPositions(stateObs.getAvatarPosition());
 
 		//Seleccionamos el portal mas proximo como destino
-		this.destino = posiciones[0].get(0).position.copy();
-        this.destino.x = Math.floor(this.destino.x / this.escala.x);
-        this.destino.y = Math.floor(this.destino.y / this.escala.y);
+		Vector2d destino = posiciones[0].get(0).position.copy();
+        destino.x = Math.floor(destino.x / this.escala.x);
+        destino.y = Math.floor(destino.y / this.escala.y);
 		
 		// Dibujamos los portales
 		for(int i=0; i<posiciones[0].size(); i++){
@@ -75,6 +88,19 @@ public class myAgent extends AbstractPlayer{
 			tablero[y][x] = 'X';
 		}
 
+		// Dibujamos los diamantes
+		posiciones = stateObs.getResourcesPositions();
+		this.diamantes = new ArrayList<Vector2d>(0);
+		if(posiciones != null){
+			nivel = 2;
+			for(int i=0; i<posiciones[0].size(); i++){
+				int x = (int) Math.floor(posiciones[0].get(i).position.x / this.escala.x);
+				int y = (int) Math.floor(posiciones[0].get(i).position.y / this.escala.y);
+				this.diamantes.add(new Vector2d(x, y));
+				this.tablero[y][x] = 'D';
+			}
+		}
+
 		// Dibujamos el mapa
 		for( int i=0; i<tablero.length; i++){
 			for(int j=0; j<tablero[i].length; j++){
@@ -83,12 +109,56 @@ public class myAgent extends AbstractPlayer{
 			System.out.print('\n');
 		}
 
+		// Calculamos el recorrido 
+		int size = diamantes.size();
+		if(size != 0){
+			this.nivel = 1;
+			this.distancias = new int[size+2][size];
+			this.media = 0;
+			for(int i=0; i<size; i++){
+				for(int j=0; j<size; j++){
+					if(i!=j){
+						// Incializamos nodos para la búsqueda
+						this.actual = new Nodo((int)diamantes.get(i).x,(int)diamantes.get(i).y,new LinkedList<ACTIONS>(), 0, new Vector2d(this.diamantes.get(j).x, this.diamantes.get(j).y));
+						this.abiertos = new PriorityQueue<Nodo>();
+						this.cerrados = new PriorityQueue<Nodo>();
+						abiertos.add(actual);
+						this.acciones = this.busqueda1(stateObs, elapsedTimer);
+						distancias[i][j] = acciones.size();
+						media += acciones.size();
+					}
+					else
+						distancias[i][j] = 0;
 
-		// Obtenemos la posicion del avatar
-		this.posicion = stateObs.getAvatarPosition().copy();
-		this.posicion.x = Math.floor(this.posicion.x / this.escala.x);
-		this.posicion.y = Math.floor(this.posicion.y / this.escala.y);
+					System.out.print(distancias[i][j]);
+					System.out.print("  ");
+				}
+				System.out.println(" ");
+			}
+			for(int i=0; i<size; i++){
+				this.actual = new Nodo((int)destino.x,(int)destino.y,new LinkedList<ACTIONS>(), 0, new Vector2d(this.diamantes.get(i).x, this.diamantes.get(i).y));
+				this.abiertos = new PriorityQueue<Nodo>();
+				this.cerrados = new PriorityQueue<Nodo>();
+				abiertos.add(actual);
+				this.acciones = this.busqueda1(stateObs, elapsedTimer);
+				media += acciones.size();
+				distancias[size][i] = acciones.size();
+			}
 
+			for(int i=0; i<size; i++){
+				this.actual = new Nodo((int)posicion.x,(int)posicion.y,new LinkedList<ACTIONS>(), 0, new Vector2d(this.diamantes.get(i).x, this.diamantes.get(i).y));
+				this.abiertos = new PriorityQueue<Nodo>();
+				this.cerrados = new PriorityQueue<Nodo>();
+				abiertos.add(actual);
+				this.acciones = this.busqueda1(stateObs, elapsedTimer);
+				media += acciones.size();
+				distancias[size+1][i] = acciones.size();
+			}
+
+			media /= (size+1)*(size);
+			System.out.println(media);
+			this.nivel = 2;
+		}
 		// Indicamos la orientación del avatar
 		int ori = 0;
 		Vector2d orientacion = stateObs.getAvatarOrientation();
@@ -127,20 +197,29 @@ public class myAgent extends AbstractPlayer{
 			return a;
 		}
 		else{
-			busqueda(stateObs, elapsedTimer);
-			ACTIONS a = acciones.poll();
+			if(nivel == 1)
+				acciones = busqueda1(stateObs, elapsedTimer);
+			else if(nivel == 2)
+				acciones = busqueda2(stateObs, elapsedTimer);
+			
+			ACTIONS a;
+			if(!acciones.isEmpty())
+				a = acciones.poll();
+			else 
+				a = Types.ACTIONS.ACTION_NIL;
+			
 			System.out.println(a);
 			return a;
 		}
 		// return Types.ACTIONS.ACTION_NIL;
 	}
 	
-	private void busqueda(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
+	private Queue<ACTIONS> busqueda1(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
 		// Obtenemos el mejor nodos de abiertos
 		actual = abiertos.poll();
 		cerrados.add(actual);
 		// Calculamos mientras no sea nodo objetivo o no se hayan superado los 50 ms
-		while(tablero[actual.pos_y][actual.pos_x] != 'Y' && elapsedTimer.remainingTimeMillis() >= -8){
+		while( !actual.esDestino() && elapsedTimer.remainingTimeMillis() >= -8){
 
 			// Genero los 4 hijos posibles
 
@@ -180,11 +259,57 @@ public class myAgent extends AbstractPlayer{
 		}
 
 		// Cuando encuentra nodo objetivo toma su lista de acciones para realizarlas
-		if(actual.pos_x == destino.x && actual.pos_y == destino.y)
-			acciones = actual.acts;
+		if(actual.esDestino())
+			return actual.acts;
+		
+		return new LinkedList<ACTIONS>();
 	}
 
-	static class Nodo implements Comparable<Nodo>{
+	private Queue<ACTIONS> busqueda2(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
+
+
+		// Obtenemos el mejor nodos de abiertos
+		Nodo2 act = new Nodo2();
+		PriorityQueue<Nodo2> ab = new PriorityQueue<Nodo2>(), 
+							 ce = new PriorityQueue<Nodo2>();
+		ce.add(act);
+		
+		while( !act.esDestino() && elapsedTimer.remainingTimeMillis() >= -8){
+
+			int size = this.diamantes.size();
+
+			if(act.diamantes.size() != size){
+				for(int i=0; i<size; i++){
+					if(!act.diamantes.contains(i)){
+						Nodo2 h = act.siguiente(i);
+						if(!ce.contains(h)){
+							ab.add(h);
+						}
+					}
+				}
+			}
+			else{
+				Nodo2 h = act.siguiente(size);
+				if(!ce.contains(h)){
+					ab.add(h);
+				}
+			}
+
+			// Toma el siguiente nodo a evaluar
+			act = ab.poll();
+			// Elimina todos los nodos iguales a actual (misma posición) en abiertos
+			ab.remove(act);
+			ce.add(act);
+		}
+
+		
+
+		System.out.println(act.diamantes);
+
+		return new LinkedList<ACTIONS>();
+	}
+
+	public class Nodo implements Comparable<Nodo>{
 
 		public int pos_x, pos_y;			// Posición en tablero 
         public Queue<ACTIONS> acts;			// Acciones de un nodo
@@ -199,8 +324,8 @@ public class myAgent extends AbstractPlayer{
 			this.acts = _acts;
 			this.destino = _destino;
 			this.g = acts.size();
-			this.distancia();
 			this.o = _o;
+			this.distancia();
 		}
 
 		public Nodo(Nodo copy){
@@ -270,6 +395,10 @@ public class myAgent extends AbstractPlayer{
 			this.h = Math.abs(this.pos_x - this.destino.x) + Math.abs(this.pos_y-this.destino.y);
 		}
 
+		public Boolean esDestino(){
+			return this.pos_x == destino.x && this.pos_y == destino.y;
+		}
+
         // Comparar para ordenar en la priority queue
 		@Override
 		public int compareTo(Nodo n) {
@@ -287,5 +416,78 @@ public class myAgent extends AbstractPlayer{
         public String toString() {
             return "Nodo [pos_x=" + pos_x + ", pos_y=" + pos_y + ", orientacion=" + o + ", f=" + (g+h) + "]\n";
         }
+	}
+
+	public class Nodo2 implements Comparable<Nodo2>{
+
+        public ArrayList<Integer> diamantes;			// Acciones de un nodo
+		public double g = 0,				// Variables de la función de evaluación
+					  h = 0;
+                     
+        public Nodo2() {
+			this.diamantes = new ArrayList<Integer>();
+			this.distancia();
+		}
+
+		public Nodo2(Nodo2 copy){
+			this.diamantes = new ArrayList<Integer>(copy.diamantes);
+			this.g = copy.g;
+			this.h = copy.h;
+		}
+
+		public Nodo2 siguiente(int i){
+			Nodo2 salida;
+			salida = new Nodo2(this);
+
+			diamantes.add(i);
+			
+			if(i!=0)
+				g += myAgent.this.distancias[i][diamantes.get(diamantes.size()-1)];
+			else
+				g += myAgent.this.distancias[diamantes.size()+1][i];
+			
+			this.distancia();
+
+			return salida;
+		}
+
+		// Calcula la distancia manhattan
+		private void distancia(){
+			this.h = (myAgent.this.diamantes.size() - diamantes.size() + 1)*myAgent.this.media;
+		}
+
+		public Boolean esDestino(){
+			return diamantes.size() == myAgent.this.diamantes.size()+1;
+		}
+
+        // Comparar para ordenar en la priority queue
+		@Override
+		public int compareTo(Nodo2 n) {
+			return (int)((this.g + this.h) - (n.g + n.h));
+        }
+
+        // Comparar que sean iguales
+        @Override
+        public boolean equals(Object o) {
+			Nodo2 n = (Nodo2) o;
+            if(this.diamantes.size() == n.diamantes.size()){
+				if(this.diamantes.size()>0){
+					if(this.diamantes.get(this.diamantes.size()-1) == n.diamantes.get(this.diamantes.size()-1)){
+						return this.diamantes.containsAll(n.diamantes);
+					}
+					else 
+						return false;
+				}
+				else
+					return true;
+			}
+
+			return false;
+        }
+        
+        // @Override
+        // public String toString() {
+        //     return "Nodo [pos_x=" + pos_x + ", pos_y=" + pos_y + ", orientacion=" + o + ", f=" + (g+h) + "]\n";
+        // }
 	}
 }
