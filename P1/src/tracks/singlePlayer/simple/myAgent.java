@@ -30,6 +30,7 @@ public class myAgent extends AbstractPlayer{
 	// Mapa
 	private Vector2d escala;
 	private Vector2d posicion;
+	int orit;
 
 	// Pathfinding
 	private Nodo actual;
@@ -142,6 +143,18 @@ public class myAgent extends AbstractPlayer{
 			System.out.print('\n');
 		}
 
+		posiciones = stateObs.getNPCPositions();
+		if(posiciones != null){
+			if(nivel==2)
+				nivel = 5;
+			else{
+				if(posiciones[0].size()>=1)
+					nivel = 3;
+				// else
+				// 	nivel = 4;
+			}
+		}
+
 		// Indicamos la orientación del avatar
 		int ori = 0;
 		Vector2d orientacion = stateObs.getAvatarOrientation();
@@ -154,6 +167,8 @@ public class myAgent extends AbstractPlayer{
 			if(orientacion.x == 1)		ori=0;
 			if(orientacion.x == -1)		ori=2;
 		}
+
+		this.orit = ori;
 
 		// Incializamos nodos para la búsqueda
 		this.actual = new Nodo((int)this.posicion.x,(int)this.posicion.y,new LinkedList<ACTIONS>(), ori, destino);
@@ -174,13 +189,22 @@ public class myAgent extends AbstractPlayer{
 	 */
 	@Override
 	public ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
-		if(!acciones.isEmpty()){
+		if(!acciones.isEmpty()){	
 			ACTIONS a = acciones.poll();
 			System.out.println(a);
 			return a;
 		}
 		else{
-			acciones = busquedaDiamantes(stateObs, elapsedTimer);
+			if(nivel==1){
+				acciones = busqueda(stateObs, elapsedTimer);
+			}
+			else if(nivel==2){
+				acciones = busquedaDiamantes(stateObs, elapsedTimer);
+			}
+			else if(nivel==3){
+				return escapar(stateObs);
+			}
+
 			if(!acciones.isEmpty()){
 				ACTIONS a = acciones.poll();
 				System.out.println(a);
@@ -192,6 +216,189 @@ public class myAgent extends AbstractPlayer{
 			}
 		}
 		// return Types.ACTIONS.ACTION_NIL;
+	}
+
+	private ACTIONS escapar(StateObservation stateObs){
+		ArrayList<Observation>[] posicionNPC = stateObs.getNPCPositions();
+		ArrayList<Vector2d> posN = new ArrayList<Vector2d>(0);
+		ACTIONS salida = Types.ACTIONS.ACTION_NIL;
+		ArrayList<Double> dists = new ArrayList<Double>(4);
+		dists.add(0.0);
+		dists.add(0.0);
+		dists.add(0.0);
+		dists.add(0.0);
+
+		for(int i=0; i<posicionNPC[0].size(); i++){
+			int x = (int) Math.floor(posicionNPC[0].get(i).position.x / this.escala.x);
+			int y = (int) Math.floor(posicionNPC[0].get(i).position.y / this.escala.y);
+			Vector2d a = new Vector2d(x,y);
+			posN.add(a);
+			double auxDist = distanciaMan(this.posicion, a);
+			// Añadimos distancias con la posición actual
+			for(int j=0; j<4 ; j++){
+				if(auxDist < dists.get(j) && i!=0)
+					dists.set(j, auxDist);
+				else if(i==0){
+					dists.set(j, auxDist);
+				}
+			}
+		}
+
+		// Orientación 0-Der, 1-Up, 2-Izq, 3-Down
+		// DERECHA
+		if(tablero[(int) this.posicion.y][(int) this.posicion.x+1] != 'X' && tablero[(int) this.posicion.y][(int) this.posicion.x+1] != 'Y'){
+			Vector2d aux = new Vector2d(this.posicion.x+1, this.posicion.y);
+			double sum = distanciaMan(aux, posN.get(0));
+			for(int i=1; i<posN.size(); i++){
+				double auxD = distanciaMan(aux, posN.get(i));
+				if(auxD < sum){
+					sum = auxD;
+				}
+			}
+			
+			if(this.orit == 0){
+				dists.set(0, sum);
+			}
+			else{
+				if(sum > dists.get(0) ){
+					dists.set(0, dists.get(0)+0.5);
+				}
+				else if(sum < dists.get(0) ){
+					dists.set(0, dists.get(0)-1.5);
+				}
+				else{
+					dists.set(0, dists.get(0)-2);
+				}
+			}
+		}
+		else{
+			dists.set(0, 0.0);
+		}
+		
+		// ARRIBA
+		if(tablero[(int) this.posicion.y-1][(int) this.posicion.x] != 'X' && tablero[(int) this.posicion.y-1][(int) this.posicion.x] != 'Y'){
+			Vector2d aux = new Vector2d(this.posicion.x, this.posicion.y-1);
+			double sum = distanciaMan(aux, posN.get(0));
+			for(int i=1; i<posN.size(); i++){
+				double auxD = distanciaMan(aux, posN.get(i));
+				if(auxD < sum){
+					sum = auxD;
+				}
+			}
+			
+			if(this.orit == 1){
+				dists.set(1, sum);
+			}
+			else{
+				if(sum > dists.get(1) ){
+					dists.set(1, dists.get(1)+0.5);
+				}
+				else if(sum < dists.get(0) ){
+					dists.set(1, dists.get(1)-1.5);
+				}
+				else{
+					dists.set(1, dists.get(1)-2);
+				}
+			}
+		}
+		else{
+			dists.set(1, 0.0);
+		}
+
+		// IZQUIERDA
+		if(tablero[(int) this.posicion.y][(int) this.posicion.x-1] != 'X' && tablero[(int) this.posicion.y][(int) this.posicion.x-1] != 'Y'){
+			Vector2d aux = new Vector2d(this.posicion.x-1, this.posicion.y);
+			double sum = distanciaMan(aux, posN.get(0));
+			for(int i=1; i<posN.size(); i++){
+				double auxD = distanciaMan(aux, posN.get(i));
+				if(auxD < sum){
+					sum = auxD;
+				}
+			}
+			
+			if(this.orit == 2){
+				dists.set(2, sum);
+			}
+			else{
+				if(sum > dists.get(2) ){
+					dists.set(2, dists.get(2)+0.5);
+				}
+				else if(sum < dists.get(0) ){
+					dists.set(2, dists.get(2)-1.5);
+				}
+				else{
+					dists.set(2, dists.get(2)-2);
+				}
+			}
+		}
+		else{
+			dists.set(2, 0.0);
+		}
+
+		// ABAJO
+		if(tablero[(int) this.posicion.y+1][(int) this.posicion.x] != 'X' && tablero[(int) this.posicion.y+1][(int) this.posicion.x] != 'Y'){
+			Vector2d aux = new Vector2d(this.posicion.x, this.posicion.y+1);
+			double sum = distanciaMan(aux, posN.get(0));
+			for(int i=1; i<posN.size(); i++){
+				double auxD = distanciaMan(aux, posN.get(i));
+				if(auxD < sum){
+					sum = auxD;
+				}
+			}
+			
+			if(this.orit == 3){
+				dists.set(3, sum);
+			}
+			else{
+				if(sum > dists.get(3) ){
+					dists.set(3, dists.get(3)+0.5);
+				}
+				else if(sum < dists.get(0) ){
+					dists.set(3, dists.get(3)-1.5);
+				}
+				else{
+					dists.set(3, dists.get(3)-2);
+				}
+			}
+		}
+		else{
+			dists.set(3, 0.0);
+		}
+
+		int pos = 0;
+		double max = dists.get(0);
+		for(int i=1; i<4; i++){
+			if(max < dists.get(i)){
+				max = dists.get(i);
+				pos = i;
+			}
+		}
+
+		switch (pos) {
+			case 0:
+				salida = Types.ACTIONS.ACTION_RIGHT;
+				if(this.orit == 0)
+					this.posicion.x++;
+				break;
+			case 1:
+				salida = Types.ACTIONS.ACTION_UP;
+				if(this.orit == 1)
+					this.posicion.y--;
+				break;
+			case 2:
+				salida = Types.ACTIONS.ACTION_LEFT;
+				if(this.orit == 2)
+					this.posicion.x--;
+				break;
+			case 3:
+				salida = Types.ACTIONS.ACTION_DOWN;
+				if(this.orit == 3)
+					this.posicion.y++;
+				break;
+		}
+
+		System.out.println(salida);
+		return salida;
 	}
 	
 	private Queue<ACTIONS> busqueda(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
@@ -466,5 +673,10 @@ public class myAgent extends AbstractPlayer{
             Objetivo n = (Objetivo) o;
             return this.equals(n);
         }
+	}
+
+	// Distancia Manhattan entre dos puntos
+	private double distanciaMan(Vector2d a, Vector2d b){
+		return Math.abs(a.x - b.x) + Math.abs(a.y-b.y);
 	}
 }
