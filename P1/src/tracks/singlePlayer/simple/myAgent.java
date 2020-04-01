@@ -7,13 +7,10 @@ import ontology.Types;
 import ontology.Types.ACTIONS;
 import tools.ElapsedCpuTimer;
 import tools.Vector2d;
-import tools.pathfinder.*;
 
 import java.util.*;
 
 public class myAgent extends AbstractPlayer{
-
-	private StateObservation estado;
 
 	// Lista de abiertos y cerrados
 	private PriorityQueue<Nodo> abiertos, cerrados;
@@ -38,10 +35,11 @@ public class myAgent extends AbstractPlayer{
 
 	// Auxiliares
 	private int nivel = 1;
-	private PathFinder pf;
-	// Distancias óptimas entre diamantes
-	private int distancias[][];
-	private double media;
+	private int diamantes_pend = 10; // Diamantes por recoger
+	private int distancias[][];	// Distancias óptimas entre diamantes
+	private double media; // Media de distancias entre diamantes
+	private int dist_personaje[];
+	private int dist_final[];
 
 	private ACTIONS[] actions;
 
@@ -53,7 +51,7 @@ public class myAgent extends AbstractPlayer{
 	 */
 	public myAgent(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
 
-		// DIBUJAMOS EL MAPA
+		// DIBUJAMOS EL MAPA-------------------------
 
 		// Calculamos la escala para poder obtener una cuadricula
 		this.escala = new Vector2d(stateObs.getWorldDimension().width / stateObs.getObservationGrid().length , 
@@ -100,7 +98,6 @@ public class myAgent extends AbstractPlayer{
 		// Dibujamos los diamantes
 		posiciones = stateObs.getResourcesPositions();
 		this.diamantes = new ArrayList<Vector2d>(0);
-		this.diamantes.add(posicion);
 		if(posiciones != null){
 			nivel = 2;
 			for(int i=0; i<posiciones[0].size(); i++){
@@ -110,9 +107,9 @@ public class myAgent extends AbstractPlayer{
 				this.tablero[y][x] = 'D';
 			}
 		}
-		this.diamantes.add(destino);
 
 		int size = diamantes.size();
+		this.distancias = new int[size][size];
 		if(size != 0){
 			this.media = 0;
 			int contador = 0;
@@ -125,18 +122,14 @@ public class myAgent extends AbstractPlayer{
 					abiertos.add(actual);
 					this.acciones = this.busqueda(stateObs, elapsedTimer);
 					media += acciones.size();
+					this.distancias[i][j] = acciones.size();
+					this.distancias[j][i] = acciones.size();
 					contador++;
 				}
 			}
 			media /= contador;
 			System.out.println(media);
 		}
-
-		ArrayList<Integer> obstaculos = new ArrayList<Integer>();
-		obstaculos.add((int)'-');
-		obstaculos.add((int)'x');
-		this.pf = new PathFinder(obstaculos);
-		this.pf.run(stateObs);
 
 		// Dibujamos el mapa
 		for( int i=0; i<tablero.length; i++){
@@ -200,7 +193,12 @@ public class myAgent extends AbstractPlayer{
 	public ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
 		Boolean peligro = false;
 		// Si está encima de un diamante lo elimina del mapa
-		
+		if( this.tablero[(int)this.posicion.y][(int)this.posicion.x] == 'D' ){
+			this.tablero[(int)this.posicion.y][(int)this.posicion.x] = '-';
+			this.diamantes_pend--;
+			int auxI = this.diamantes.indexOf(this.posicion);
+			this.diamantes.set(auxI, new Vector2d(-1,-1));
+		}
 
 		if(nivel >= 3){
 			calcularMapaCalor(stateObs);
@@ -222,7 +220,18 @@ public class myAgent extends AbstractPlayer{
 					acciones = busquedaDiamantes(stateObs, elapsedTimer);
 				}
 				else if(nivel == 5){
-					acciones = busquedaDiamantes(stateObs, elapsedTimer);
+					if(this.diamantes_pend > 0)
+						acciones = busquedaDiamantes(stateObs, elapsedTimer);
+					else{
+						this.actual = new Nodo((int)this.posicion.x,(int)this.posicion.y,new LinkedList<ACTIONS>(), this.orit, this.destino);
+
+						this.abiertos = new PriorityQueue<Nodo>();
+						this.cerrados = new PriorityQueue<Nodo>();
+
+						this.abiertos.add(actual);
+
+						this.acciones = busqueda(stateObs, elapsedTimer);
+					}
 				}
 			}
 			else{
@@ -481,28 +490,6 @@ public class myAgent extends AbstractPlayer{
 		return salida;
 	}
 
-	// private Queue<ACTIONS> alejarMuro(){
-	// 	Queue<ACTIONS> salida = new LinkedList<ACTIONS>();
-
-	// 	if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == 'X'){
-	// 		salida.add(Types.ACTIONS.ACTION_DOWN);
-	// 	}
-		
-	// 	if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == 'X'){
-	// 		salida.add(Types.ACTIONS.ACTION_UP);
-	// 	}
-
-	// 	if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == 'X'){
-	// 		salida.add(Types.ACTIONS.ACTION_RIGHT);
-	// 	}
-
-	// 	if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == 'X'){
-	// 		salida.add(Types.ACTIONS.ACTION_LEFT);
-	// 	}
-
-	// 	return salida;
-	// }
-	
 	private Queue<ACTIONS> busqueda(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
 		// Obtenemos el mejor nodos de abiertos
 		actual = abiertos.poll();
@@ -662,83 +649,96 @@ public class myAgent extends AbstractPlayer{
             return "Nodo [pos_x=" + pos_x + ", pos_y=" + pos_y + ", orientacion=" + o + ", f=" + (g+h) + "]\n";
         }
 	}
-
+//
+//
+//
+//
 	private Queue<ACTIONS> busquedaDiamantes(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
-		PriorityQueue<Objetivo> ab = new PriorityQueue<Objetivo>();
+		Vector2d diamanteNoValido = new Vector2d(-1.0,-1.0);
 		ArrayList<Integer> num = new ArrayList<Integer>(0);
-		for(int i=0; i<this.diamantes.size(); i++){
-			num.add(i);
+		
+		dist_personaje = new int [diamantes.size()];
+		dist_final = new int [diamantes.size()];
+		for(int i=0; i<diamantes.size(); i++){
+			dist_personaje[i] = (int)distanciaMan(this.posicion, diamantes.get(i));
+			dist_final[i] = (int)distanciaMan(this.destino, diamantes.get(i));
+			if(diamantes.get(i).x != diamanteNoValido.x && diamantes.get(i).y != diamanteNoValido.y)
+				num.add(i);
 		}
 
+		PriorityQueue<Objetivo> ab = new PriorityQueue<Objetivo>();
 		Objetivo act = new Objetivo(num);
 
-		while( !act.obj.isEmpty() && elapsedTimer.remainingTimeMillis() >= -8){
+		while( act.obj > 0 && elapsedTimer.remainingTimeMillis() >= -8){
 
-			int size = act.obj.size();
-			if(size > 1){
-				for(int i=0; i<size-1; i++){
-					ab.add(act.siguiente(i));
+			if(act.obj > 1){
+				int size = act.rest.size();
+				for(int i=0; i<size; i++){
+					ab.add(act.siguiente(act.rest.get(i)));
 				}
 			}
 			else{
-				ab.add(act.siguiente(0));
+				ab.add(act.siguiente(-1));
 			}
 
 			act = ab.poll();
 		}
 
 		System.out.println(this.diamantes);
-		System.out.println(act.sol);
-
-		if(act.obj.isEmpty()){
-
-			Vector2d orientacion = stateObs.getAvatarOrientation();
-			int ori = 0;
-
-			if(orientacion.x == 0){
-				if(orientacion.y == 1) 		ori=3;
-				if(orientacion.y == -1) 	ori=1;
-			}
-			else{
-				if(orientacion.x == 1)		ori=0;
-				if(orientacion.x == -1)		ori=2;
-			}
+		System.out.println(act.d);
 	
-			this.acciones = new LinkedList<ACTIONS>();
-			
-			for(int i=1; i<act.sol.size(); i++){
-				this.actual = new Nodo((int)this.diamantes.get(act.sol.get(i-1)).x, (int)this.diamantes.get(act.sol.get(i-1)).y,  new LinkedList<ACTIONS>(), ori, this.diamantes.get(act.sol.get(i)));
-				this.abiertos = new PriorityQueue<Nodo>();
-				this.cerrados = new PriorityQueue<Nodo>();
-				this.abiertos.add(this.actual);
-				
-				this.acciones.addAll(busqueda(stateObs, elapsedTimer));
-				ori = this.actual.o;
-			}
+		Queue<ACTIONS> actions = new LinkedList<ACTIONS>();
+		
+		int ori = this.orit;
 
-			return this.acciones;
+		// Nodo inicio con primer diamante
+		this.actual = new Nodo((int)this.posicion.x, (int)this.posicion.y,  new LinkedList<ACTIONS>(), ori, this.diamantes.get(act.d.get(0)));
+		this.abiertos = new PriorityQueue<Nodo>();
+		this.cerrados = new PriorityQueue<Nodo>();
+		this.abiertos.add(this.actual);
+		actions.addAll(busqueda(stateObs, elapsedTimer));
+		ori = this.actual.o;
+
+		// Camino hacia diamantes
+		for(int i=0; i<act.d.size()-1; i++){
+			this.actual = new Nodo((int)this.diamantes.get(act.d.get(i)).x, (int)this.diamantes.get(act.d.get(i)).y,  new LinkedList<ACTIONS>(), ori, this.diamantes.get(act.d.get(i+1)));
+			this.abiertos = new PriorityQueue<Nodo>();
+			this.cerrados = new PriorityQueue<Nodo>();
+			this.abiertos.add(this.actual);
+			actions.addAll(busqueda(stateObs, elapsedTimer));
+			ori = this.actual.o;
 		}
 
-		return new LinkedList<ACTIONS>();
+		// Último diamante hasta puerta
+		this.actual = new Nodo((int)this.diamantes.get(act.d.get(act.d.size()-1)).x, (int)this.diamantes.get(act.d.get(act.d.size()-1)).y,  new LinkedList<ACTIONS>(), ori, this.destino);
+		this.abiertos = new PriorityQueue<Nodo>();
+		this.cerrados = new PriorityQueue<Nodo>();
+		this.abiertos.add(this.actual);
+		actions.addAll(busqueda(stateObs, elapsedTimer));
+
+		return actions;
 	}
 
 	public class Objetivo implements Comparable<Objetivo>{
-        public ArrayList<Integer> obj;		// Acciones de un nodo
+		public ArrayList<Integer> d;		// Acciones de un nodo
+		public ArrayList<Integer> rest;     // Diamantes restantes
+		public int obj;
 		public double g = 0,				// Variables de la función de evaluación
 					  h = 0;
-		public ArrayList<Integer> sol;
+		// public ArrayList<Integer> sol;
 		
-		public Objetivo(ArrayList<Integer> _obj){
-			this.obj = new ArrayList<Integer>(_obj);
-			this.sol = new ArrayList<Integer>();
-			sol.add( obj.remove(0) );
+		public Objetivo(ArrayList<Integer> dia){
+			this.rest = new ArrayList<Integer>(dia);
+			this.d = new ArrayList<Integer>();
+			this.obj = myAgent.this.diamantes_pend+1;
 			this.g = 0;
 			this.heuristica();
 		}
 
 		public Objetivo( Objetivo cp ){
-			this.obj = new ArrayList<Integer>(cp.obj);
-			this.sol = new ArrayList<Integer>(cp.sol);
+			this.obj = cp.obj;
+			this.rest = new ArrayList<Integer>(cp.rest);
+			this.d = new ArrayList<Integer>(cp.d);
 			this.g = cp.g;
 			this.h = cp.h;
 		}
@@ -746,21 +746,29 @@ public class myAgent extends AbstractPlayer{
 		public Objetivo siguiente(int i){
 			Objetivo salida = new Objetivo(this);
 
-			int pos = salida.obj.remove(i);
-			int tam = myAgent.this.pf.getPath(myAgent.this.diamantes.get(salida.sol.get(salida.sol.size()-1)), myAgent.this.diamantes.get(pos)).size();
-			salida.g += tam;
-			salida.sol.add(pos);
-			salida.heuristica();
+			if(i >= 0){
+				if(salida.d.size() > 0)
+					salida.g += myAgent.this.distancias[d.get(d.size()-1)][i];
+				else
+					salida.g += myAgent.this.dist_personaje[i];
+
+				salida.rest.remove(Integer.valueOf(i));
+				salida.obj--;
+				salida.heuristica();
+				salida.d.add(i);
+			}
+			else{
+				// Primer hijo
+				salida.g += myAgent.this.dist_final[d.get(d.size()-1)];
+				salida.h = 0;
+				salida.obj--;
+			}
 
 			return salida;
 		}
 
-		private double distanciaMan(Vector2d a, Vector2d b){
-			return Math.abs(a.x - b.x) + Math.abs(a.y-b.y);
-		}
-
 		private void heuristica(){
-			this.h = myAgent.this.media*this.obj.size();
+			this.h = myAgent.this.media*this.obj;
 		}
 
 		// Comparar para ordenar en la priority queue
