@@ -128,7 +128,6 @@ public class myAgent extends AbstractPlayer{
 				}
 			}
 			media /= contador;
-			System.out.println(media);
 		}
 
 		// Dibujamos el mapa
@@ -199,6 +198,8 @@ public class myAgent extends AbstractPlayer{
 			int auxI = this.diamantes.indexOf(this.posicion);
 			this.diamantes.set(auxI, new Vector2d(-1,-1));
 		}
+		else if(this.tablero[(int)this.posicion.y][(int)this.posicion.x] == 'Y' && nivel==1)
+			return Types.ACTIONS.ACTION_NIL;
 
 		if(nivel >= 3){
 			calcularMapaCalor(stateObs);
@@ -251,14 +252,12 @@ public class myAgent extends AbstractPlayer{
 				return Types.ACTIONS.ACTION_NIL;
 			}
 		}
-		// return Types.ACTIONS.ACTION_NIL;
 	}
 
 	private Queue<ACTIONS> escapar(StateObservation stateObs){
 		Queue<ACTIONS> salida = new LinkedList<ACTIONS>();
 
 		if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x] == '1'){
-			System.out.println('1');
 			if(this.orit == 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '-'){
 				salida.add(Types.ACTIONS.ACTION_RIGHT);
 			}
@@ -273,182 +272,126 @@ public class myAgent extends AbstractPlayer{
 			}
 			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '-'){
 				salida.add(Types.ACTIONS.ACTION_RIGHT);
-				// salida.add(Types.ACTIONS.ACTION_RIGHT);
 			}
 			else if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '-'){
 				salida.add(Types.ACTIONS.ACTION_UP);
-				// salida.add(Types.ACTIONS.ACTION_UP);
 			}
 			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '-'){
 				salida.add(Types.ACTIONS.ACTION_LEFT);
-				// salida.add(Types.ACTIONS.ACTION_LEFT);
 			}
 			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '-'){
 				salida.add(Types.ACTIONS.ACTION_DOWN);
-				// salida.add(Types.ACTIONS.ACTION_DOWN);
 			}
 			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == 'X'){
 				if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == 'X'){
 					// Muro arriba y a la derecha
-					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-2] == '1'){
+					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-2] == '1')
 						salida.add(Types.ACTIONS.ACTION_LEFT);
-						// salida.add(Types.ACTIONS.ACTION_LEFT);
-						// salida.add(Types.ACTIONS.ACTION_LEFT);
-					}
-					else{
+					else
 						salida.add(Types.ACTIONS.ACTION_DOWN);
-						// salida.add(Types.ACTIONS.ACTION_DOWN);
-						// salida.add(Types.ACTIONS.ACTION_DOWN);
-					}
 				}
 				if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == 'X'){
 					// Muro abajo y a la derecha
-					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-2] == '1'){
+					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-2] == '1')
 						salida.add(Types.ACTIONS.ACTION_LEFT);
-						// salida.add(Types.ACTIONS.ACTION_LEFT);
-						// salida.add(Types.ACTIONS.ACTION_LEFT);
-					}
-					else{
+					else
 						salida.add(Types.ACTIONS.ACTION_UP);
-						// salida.add(Types.ACTIONS.ACTION_UP);
-						// salida.add(Types.ACTIONS.ACTION_UP);
-					}
 				}
 			}
 			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == 'X'){
 				if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == 'X'){
 					// Muro arriba y a la izquierda
-					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+2] == '1'){
+					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+2] == '1')
 						salida.add(Types.ACTIONS.ACTION_RIGHT);
-						// salida.add(Types.ACTIONS.ACTION_RIGHT);
-						// salida.add(Types.ACTIONS.ACTION_RIGHT);
-					}
-					else{
+					else
 						salida.add(Types.ACTIONS.ACTION_DOWN);
-						// salida.add(Types.ACTIONS.ACTION_DOWN);
-						// salida.add(Types.ACTIONS.ACTION_DOWN);
-					}
 				}
 				if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == 'X'){
 					// Muro abajo y a la derecha
-					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+2] == '1'){
+					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+2] == '1')
 						salida.add(Types.ACTIONS.ACTION_RIGHT);
-						// salida.add(Types.ACTIONS.ACTION_RIGHT);
-						// salida.add(Types.ACTIONS.ACTION_RIGHT);
-					}
-					else{
+					else
 						salida.add(Types.ACTIONS.ACTION_UP);
-						// salida.add(Types.ACTIONS.ACTION_UP);
-						// salida.add(Types.ACTIONS.ACTION_UP);
-					}
 				}
 			}
 		}
 		else if( mapa_calor[(int)this.posicion.y][(int)this.posicion.x] == '2' ){
-			System.out.println('2');
 			if(this.orit == 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '1'){
 				salida.add(Types.ACTIONS.ACTION_RIGHT);
-				// salida.add(Types.ACTIONS.ACTION_RIGHT);
 			}
 			else if(this.orit == 1 && mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '1'){
 				salida.add(Types.ACTIONS.ACTION_UP);
-				// salida.add(Types.ACTIONS.ACTION_UP);
 			}
 			else if(this.orit == 2 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '1'){
 				salida.add(Types.ACTIONS.ACTION_LEFT);
-				// salida.add(Types.ACTIONS.ACTION_LEFT);
 			}
 			else if(this.orit == 3 && mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '1'){
 				salida.add(Types.ACTIONS.ACTION_DOWN);
-				// salida.add(Types.ACTIONS.ACTION_DOWN);
 			}
 			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '1'){
 				salida.add(Types.ACTIONS.ACTION_RIGHT);
-				// salida.add(Types.ACTIONS.ACTION_RIGHT);
 			}
 			else if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '1'){
 				salida.add(Types.ACTIONS.ACTION_UP);
-				// salida.add(Types.ACTIONS.ACTION_UP);
 			}
 			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '1'){
 				salida.add(Types.ACTIONS.ACTION_LEFT);
-				// salida.add(Types.ACTIONS.ACTION_LEFT);
 			}
 			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '1'){
 				salida.add(Types.ACTIONS.ACTION_DOWN);
-				// salida.add(Types.ACTIONS.ACTION_DOWN);
 			}
 			else if(this.orit != 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '3'){
 				salida.add(Types.ACTIONS.ACTION_RIGHT);
-				// salida.add(Types.ACTIONS.ACTION_RIGHT);
 			}
 			else if(this.orit != 1 && mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '3'){
 				salida.add(Types.ACTIONS.ACTION_UP);
-				// salida.add(Types.ACTIONS.ACTION_UP);
 			}
 			else if(this.orit != 2 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '3'){
 				salida.add(Types.ACTIONS.ACTION_LEFT);
-				// salida.add(Types.ACTIONS.ACTION_LEFT);
 			}
 			else if(this.orit != 3 && mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '3'){
 				salida.add(Types.ACTIONS.ACTION_DOWN);
-				// salida.add(Types.ACTIONS.ACTION_DOWN);
 			}
 			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '3'){
 				salida.add(Types.ACTIONS.ACTION_RIGHT);
-				// salida.add(Types.ACTIONS.ACTION_RIGHT);
 			}
 			else if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '3'){
 				salida.add(Types.ACTIONS.ACTION_UP);
-				// salida.add(Types.ACTIONS.ACTION_UP);
 			}
 			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '3'){
 				salida.add(Types.ACTIONS.ACTION_LEFT);
-				// salida.add(Types.ACTIONS.ACTION_LEFT);
 			}
 			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '3'){
 				salida.add(Types.ACTIONS.ACTION_DOWN);
-				// salida.add(Types.ACTIONS.ACTION_DOWN);
 			}
 		}
 		else if( mapa_calor[(int)this.posicion.y][(int)this.posicion.x] == '3' ){
-			System.out.println('3');
 			if(this.orit == 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '2'){
 				salida.add(Types.ACTIONS.ACTION_RIGHT);
-				// salida.add(Types.ACTIONS.ACTION_RIGHT);
 			}
 			else if(this.orit == 1 && mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '2'){
 				salida.add(Types.ACTIONS.ACTION_UP);
-				// salida.add(Types.ACTIONS.ACTION_UP);
 			}
 			else if(this.orit == 2 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '2'){
 				salida.add(Types.ACTIONS.ACTION_LEFT);
-				// salida.add(Types.ACTIONS.ACTION_LEFT);
 			}
 			else if(this.orit == 3 && mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '2'){
 				salida.add(Types.ACTIONS.ACTION_DOWN);
-				// salida.add(Types.ACTIONS.ACTION_DOWN);
 			}
 			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '2'){
 				salida.add(Types.ACTIONS.ACTION_RIGHT);
-				// salida.add(Types.ACTIONS.ACTION_RIGHT);
 			}
 			else if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '2'){
 				salida.add(Types.ACTIONS.ACTION_UP);
-				// salida.add(Types.ACTIONS.ACTION_UP);
 			}
 			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '2'){
 				salida.add(Types.ACTIONS.ACTION_LEFT);
-				// salida.add(Types.ACTIONS.ACTION_LEFT);
 			}
 			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '2'){
 				salida.add(Types.ACTIONS.ACTION_DOWN);
-				// salida.add(Types.ACTIONS.ACTION_DOWN);
 			}
 		}
 
-
-		System.out.println(salida);
 		return salida;
 	}
 
@@ -456,7 +399,6 @@ public class myAgent extends AbstractPlayer{
 		Queue<ACTIONS> salida = new LinkedList<ACTIONS>();
 
 		if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x] == '1'){
-			System.out.println('1');
 			if(this.orit == 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '1'){
 				salida.add(Types.ACTIONS.ACTION_RIGHT);
 			}
@@ -486,7 +428,6 @@ public class myAgent extends AbstractPlayer{
 			salida.add(Types.ACTIONS.ACTION_NIL);
 		}
 
-		System.out.println(salida);
 		return salida;
 	}
 
@@ -643,16 +584,8 @@ public class myAgent extends AbstractPlayer{
             Nodo n = (Nodo) o;
             return this.pos_x== n.pos_x && this.pos_y == n.pos_y && this.o == n.o;
         }
-        
-        @Override
-        public String toString() {
-            return "Nodo [pos_x=" + pos_x + ", pos_y=" + pos_y + ", orientacion=" + o + ", f=" + (g+h) + "]\n";
-        }
 	}
-//
-//
-//
-//
+
 	private Queue<ACTIONS> busquedaDiamantes(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
 		Vector2d diamanteNoValido = new Vector2d(-1.0,-1.0);
 		ArrayList<Integer> num = new ArrayList<Integer>(0);
@@ -666,6 +599,7 @@ public class myAgent extends AbstractPlayer{
 				num.add(i);
 		}
 
+		// Busco una secuencia de diamantes
 		PriorityQueue<Objetivo> ab = new PriorityQueue<Objetivo>();
 		Objetivo act = new Objetivo(num);
 
@@ -683,10 +617,8 @@ public class myAgent extends AbstractPlayer{
 
 			act = ab.poll();
 		}
-
-		System.out.println(this.diamantes);
-		System.out.println(act.d);
 	
+		// Con la secuencia de diamantes, calculo el camino óptimo entre ellos
 		Queue<ACTIONS> actions = new LinkedList<ACTIONS>();
 		
 		int ori = this.orit;
@@ -725,7 +657,6 @@ public class myAgent extends AbstractPlayer{
 		public int obj;
 		public double g = 0,				// Variables de la función de evaluación
 					  h = 0;
-		// public ArrayList<Integer> sol;
 		
 		public Objetivo(ArrayList<Integer> dia){
 			this.rest = new ArrayList<Integer>(dia);
@@ -950,13 +881,5 @@ public class myAgent extends AbstractPlayer{
 			}
 
 		}
-
-		for( int i=0; i<this.mapa_calor.length; i++){
-			for(int j=0; j<this.mapa_calor[i].length; j++){
-				System.out.print(this.mapa_calor[i][j]);
-			}
-			System.out.print('\n');
-		}
-
 	}
 }
