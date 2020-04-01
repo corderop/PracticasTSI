@@ -26,6 +26,7 @@ public class myAgent extends AbstractPlayer{
 	private char[][] tablero;
 	private Vector2d destino;
 	private ArrayList<Vector2d> diamantes;
+	private char[][] mapa_calor;
 
 	// Mapa
 	private Vector2d escala;
@@ -41,6 +42,8 @@ public class myAgent extends AbstractPlayer{
 	// Distancias óptimas entre diamantes
 	private int distancias[][];
 	private double media;
+
+	private ACTIONS[] actions;
 
 
 	/**
@@ -148,12 +151,18 @@ public class myAgent extends AbstractPlayer{
 			if(nivel==2)
 				nivel = 5;
 			else{
-				if(posiciones[0].size()>=1)
+				if(posiciones[0].size()==1)
 					nivel = 3;
-				// else
-				// 	nivel = 4;
+				else if(posiciones[0].size()>=1)
+					nivel = 4;
 			}
 		}
+
+		actions = new ACTIONS[4];
+		actions[0] = Types.ACTIONS.ACTION_RIGHT;
+		actions[1] = Types.ACTIONS.ACTION_UP;
+		actions[2] = Types.ACTIONS.ACTION_LEFT;
+		actions[3] = Types.ACTIONS.ACTION_DOWN;
 
 		// Indicamos la orientación del avatar
 		int ori = 0;
@@ -189,217 +198,310 @@ public class myAgent extends AbstractPlayer{
 	 */
 	@Override
 	public ACTIONS act(StateObservation stateObs, ElapsedCpuTimer elapsedTimer) {
-		if(!acciones.isEmpty()){	
+		Boolean peligro = false;
+		// Si está encima de un diamante lo elimina del mapa
+		
+
+		if(nivel >= 3){
+			calcularMapaCalor(stateObs);
+			peligro = this.mapa_calor[(int)this.posicion.y][(int)this.posicion.x] != '-';
+		}
+
+		if(!acciones.isEmpty() && !peligro){	
 			ACTIONS a = acciones.poll();
+			cambiarPosicion(a);
 			System.out.println(a);
 			return a;
 		}
 		else{
-			if(nivel==1){
-				acciones = busqueda(stateObs, elapsedTimer);
+			if(!peligro){
+				if(nivel==1){
+					acciones = busqueda(stateObs, elapsedTimer);
+				}
+				else if(nivel==2){
+					acciones = busquedaDiamantes(stateObs, elapsedTimer);
+				}
+				else if(nivel == 5){
+					acciones = busquedaDiamantes(stateObs, elapsedTimer);
+				}
 			}
-			else if(nivel==2){
-				acciones = busquedaDiamantes(stateObs, elapsedTimer);
-			}
-			else if(nivel==3){
-				return escapar(stateObs);
+			else{
+				acciones = escapar(stateObs);
+				if(acciones.isEmpty())
+					acciones = escapar2(stateObs);
 			}
 
 			if(!acciones.isEmpty()){
 				ACTIONS a = acciones.poll();
+				cambiarPosicion(a);
 				System.out.println(a);
 				return a;
 			}
 			else{
-				System.out.println("Camino no encontrado");
+				System.out.println(Types.ACTIONS.ACTION_NIL);
 				return Types.ACTIONS.ACTION_NIL;
 			}
 		}
 		// return Types.ACTIONS.ACTION_NIL;
 	}
 
-	private ACTIONS escapar(StateObservation stateObs){
-		ArrayList<Observation>[] posicionNPC = stateObs.getNPCPositions();
-		ArrayList<Vector2d> posN = new ArrayList<Vector2d>(0);
-		ACTIONS salida = Types.ACTIONS.ACTION_NIL;
-		ArrayList<Double> dists = new ArrayList<Double>(4);
-		dists.add(0.0);
-		dists.add(0.0);
-		dists.add(0.0);
-		dists.add(0.0);
+	private Queue<ACTIONS> escapar(StateObservation stateObs){
+		Queue<ACTIONS> salida = new LinkedList<ACTIONS>();
 
-		for(int i=0; i<posicionNPC[0].size(); i++){
-			int x = (int) Math.floor(posicionNPC[0].get(i).position.x / this.escala.x);
-			int y = (int) Math.floor(posicionNPC[0].get(i).position.y / this.escala.y);
-			Vector2d a = new Vector2d(x,y);
-			posN.add(a);
-			double auxDist = distanciaMan(this.posicion, a);
-			// Añadimos distancias con la posición actual
-			for(int j=0; j<4 ; j++){
-				if(auxDist < dists.get(j) && i!=0)
-					dists.set(j, auxDist);
-				else if(i==0){
-					dists.set(j, auxDist);
+		if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x] == '1'){
+			System.out.println('1');
+			if(this.orit == 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '-'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(this.orit == 1 && mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '-'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(this.orit == 2 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '-'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(this.orit == 3 && mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '-'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '-'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+				// salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '-'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+				// salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '-'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+				// salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '-'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+				// salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == 'X'){
+				if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == 'X'){
+					// Muro arriba y a la derecha
+					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-2] == '1'){
+						salida.add(Types.ACTIONS.ACTION_LEFT);
+						// salida.add(Types.ACTIONS.ACTION_LEFT);
+						// salida.add(Types.ACTIONS.ACTION_LEFT);
+					}
+					else{
+						salida.add(Types.ACTIONS.ACTION_DOWN);
+						// salida.add(Types.ACTIONS.ACTION_DOWN);
+						// salida.add(Types.ACTIONS.ACTION_DOWN);
+					}
+				}
+				if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == 'X'){
+					// Muro abajo y a la derecha
+					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-2] == '1'){
+						salida.add(Types.ACTIONS.ACTION_LEFT);
+						// salida.add(Types.ACTIONS.ACTION_LEFT);
+						// salida.add(Types.ACTIONS.ACTION_LEFT);
+					}
+					else{
+						salida.add(Types.ACTIONS.ACTION_UP);
+						// salida.add(Types.ACTIONS.ACTION_UP);
+						// salida.add(Types.ACTIONS.ACTION_UP);
+					}
+				}
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == 'X'){
+				if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == 'X'){
+					// Muro arriba y a la izquierda
+					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+2] == '1'){
+						salida.add(Types.ACTIONS.ACTION_RIGHT);
+						// salida.add(Types.ACTIONS.ACTION_RIGHT);
+						// salida.add(Types.ACTIONS.ACTION_RIGHT);
+					}
+					else{
+						salida.add(Types.ACTIONS.ACTION_DOWN);
+						// salida.add(Types.ACTIONS.ACTION_DOWN);
+						// salida.add(Types.ACTIONS.ACTION_DOWN);
+					}
+				}
+				if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == 'X'){
+					// Muro abajo y a la derecha
+					if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+2] == '1'){
+						salida.add(Types.ACTIONS.ACTION_RIGHT);
+						// salida.add(Types.ACTIONS.ACTION_RIGHT);
+						// salida.add(Types.ACTIONS.ACTION_RIGHT);
+					}
+					else{
+						salida.add(Types.ACTIONS.ACTION_UP);
+						// salida.add(Types.ACTIONS.ACTION_UP);
+						// salida.add(Types.ACTIONS.ACTION_UP);
+					}
 				}
 			}
 		}
+		else if( mapa_calor[(int)this.posicion.y][(int)this.posicion.x] == '2' ){
+			System.out.println('2');
+			if(this.orit == 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '1'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+				// salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(this.orit == 1 && mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '1'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+				// salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(this.orit == 2 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '1'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+				// salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(this.orit == 3 && mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '1'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+				// salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '1'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+				// salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '1'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+				// salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '1'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+				// salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '1'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+				// salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+			else if(this.orit != 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '3'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+				// salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(this.orit != 1 && mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '3'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+				// salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(this.orit != 2 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '3'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+				// salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(this.orit != 3 && mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '3'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+				// salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '3'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+				// salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '3'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+				// salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '3'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+				// salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '3'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+				// salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+		}
+		else if( mapa_calor[(int)this.posicion.y][(int)this.posicion.x] == '3' ){
+			System.out.println('3');
+			if(this.orit == 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '2'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+				// salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(this.orit == 1 && mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '2'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+				// salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(this.orit == 2 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '2'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+				// salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(this.orit == 3 && mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '2'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+				// salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '2'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+				// salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '2'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+				// salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '2'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+				// salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '2'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+				// salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+		}
 
-		// Orientación 0-Der, 1-Up, 2-Izq, 3-Down
-		// DERECHA
-		if(tablero[(int) this.posicion.y][(int) this.posicion.x+1] != 'X' && tablero[(int) this.posicion.y][(int) this.posicion.x+1] != 'Y'){
-			Vector2d aux = new Vector2d(this.posicion.x+1, this.posicion.y);
-			double sum = distanciaMan(aux, posN.get(0));
-			for(int i=1; i<posN.size(); i++){
-				double auxD = distanciaMan(aux, posN.get(i));
-				if(auxD < sum){
-					sum = auxD;
-				}
+
+		System.out.println(salida);
+		return salida;
+	}
+
+	private Queue<ACTIONS> escapar2(StateObservation stateObs){
+		Queue<ACTIONS> salida = new LinkedList<ACTIONS>();
+
+		if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x] == '1'){
+			System.out.println('1');
+			if(this.orit == 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '1'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
 			}
-			
-			if(this.orit == 0){
-				dists.set(0, sum);
+			else if(this.orit == 1 && mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '1'){
+				salida.add(Types.ACTIONS.ACTION_UP);
 			}
-			else{
-				if(sum > dists.get(0) ){
-					dists.set(0, dists.get(0)+0.5);
-				}
-				else if(sum < dists.get(0) ){
-					dists.set(0, dists.get(0)-1.5);
-				}
-				else{
-					dists.set(0, dists.get(0)-2);
-				}
+			else if(this.orit == 2 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '1'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(this.orit == 3 && mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '1'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '1'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '1'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '1'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '1'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
 			}
 		}
 		else{
-			dists.set(0, 0.0);
-		}
-		
-		// ARRIBA
-		if(tablero[(int) this.posicion.y-1][(int) this.posicion.x] != 'X' && tablero[(int) this.posicion.y-1][(int) this.posicion.x] != 'Y'){
-			Vector2d aux = new Vector2d(this.posicion.x, this.posicion.y-1);
-			double sum = distanciaMan(aux, posN.get(0));
-			for(int i=1; i<posN.size(); i++){
-				double auxD = distanciaMan(aux, posN.get(i));
-				if(auxD < sum){
-					sum = auxD;
-				}
-			}
-			
-			if(this.orit == 1){
-				dists.set(1, sum);
-			}
-			else{
-				if(sum > dists.get(1) ){
-					dists.set(1, dists.get(1)+0.5);
-				}
-				else if(sum < dists.get(0) ){
-					dists.set(1, dists.get(1)-1.5);
-				}
-				else{
-					dists.set(1, dists.get(1)-2);
-				}
-			}
-		}
-		else{
-			dists.set(1, 0.0);
-		}
-
-		// IZQUIERDA
-		if(tablero[(int) this.posicion.y][(int) this.posicion.x-1] != 'X' && tablero[(int) this.posicion.y][(int) this.posicion.x-1] != 'Y'){
-			Vector2d aux = new Vector2d(this.posicion.x-1, this.posicion.y);
-			double sum = distanciaMan(aux, posN.get(0));
-			for(int i=1; i<posN.size(); i++){
-				double auxD = distanciaMan(aux, posN.get(i));
-				if(auxD < sum){
-					sum = auxD;
-				}
-			}
-			
-			if(this.orit == 2){
-				dists.set(2, sum);
-			}
-			else{
-				if(sum > dists.get(2) ){
-					dists.set(2, dists.get(2)+0.5);
-				}
-				else if(sum < dists.get(0) ){
-					dists.set(2, dists.get(2)-1.5);
-				}
-				else{
-					dists.set(2, dists.get(2)-2);
-				}
-			}
-		}
-		else{
-			dists.set(2, 0.0);
-		}
-
-		// ABAJO
-		if(tablero[(int) this.posicion.y+1][(int) this.posicion.x] != 'X' && tablero[(int) this.posicion.y+1][(int) this.posicion.x] != 'Y'){
-			Vector2d aux = new Vector2d(this.posicion.x, this.posicion.y+1);
-			double sum = distanciaMan(aux, posN.get(0));
-			for(int i=1; i<posN.size(); i++){
-				double auxD = distanciaMan(aux, posN.get(i));
-				if(auxD < sum){
-					sum = auxD;
-				}
-			}
-			
-			if(this.orit == 3){
-				dists.set(3, sum);
-			}
-			else{
-				if(sum > dists.get(3) ){
-					dists.set(3, dists.get(3)+0.5);
-				}
-				else if(sum < dists.get(0) ){
-					dists.set(3, dists.get(3)-1.5);
-				}
-				else{
-					dists.set(3, dists.get(3)-2);
-				}
-			}
-		}
-		else{
-			dists.set(3, 0.0);
-		}
-
-		int pos = 0;
-		double max = dists.get(0);
-		for(int i=1; i<4; i++){
-			if(max < dists.get(i)){
-				max = dists.get(i);
-				pos = i;
-			}
-		}
-
-		switch (pos) {
-			case 0:
-				salida = Types.ACTIONS.ACTION_RIGHT;
-				if(this.orit == 0)
-					this.posicion.x++;
-				break;
-			case 1:
-				salida = Types.ACTIONS.ACTION_UP;
-				if(this.orit == 1)
-					this.posicion.y--;
-				break;
-			case 2:
-				salida = Types.ACTIONS.ACTION_LEFT;
-				if(this.orit == 2)
-					this.posicion.x--;
-				break;
-			case 3:
-				salida = Types.ACTIONS.ACTION_DOWN;
-				if(this.orit == 3)
-					this.posicion.y++;
-				break;
+			salida.add(Types.ACTIONS.ACTION_NIL);
 		}
 
 		System.out.println(salida);
 		return salida;
 	}
+
+	// private Queue<ACTIONS> alejarMuro(){
+	// 	Queue<ACTIONS> salida = new LinkedList<ACTIONS>();
+
+	// 	if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == 'X'){
+	// 		salida.add(Types.ACTIONS.ACTION_DOWN);
+	// 	}
+		
+	// 	if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == 'X'){
+	// 		salida.add(Types.ACTIONS.ACTION_UP);
+	// 	}
+
+	// 	if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == 'X'){
+	// 		salida.add(Types.ACTIONS.ACTION_RIGHT);
+	// 	}
+
+	// 	if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == 'X'){
+	// 		salida.add(Types.ACTIONS.ACTION_LEFT);
+	// 	}
+
+	// 	return salida;
+	// }
 	
 	private Queue<ACTIONS> busqueda(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
 		// Obtenemos el mejor nodos de abiertos
@@ -678,5 +780,175 @@ public class myAgent extends AbstractPlayer{
 	// Distancia Manhattan entre dos puntos
 	private double distanciaMan(Vector2d a, Vector2d b){
 		return Math.abs(a.x - b.x) + Math.abs(a.y-b.y);
+	}
+
+	private void cambiarPosicion(ACTIONS a){
+
+		if( a == Types.ACTIONS.ACTION_UP ){
+			if(this.orit == 1 )
+				this.posicion.y--;
+			else
+				this.orit = 1;
+		}
+		else if( a == Types.ACTIONS.ACTION_DOWN ){
+			if(this.orit == 3 )
+				this.posicion.y++;
+			else
+				this.orit = 3;
+		}
+		else if( a == Types.ACTIONS.ACTION_LEFT ){
+			if(this.orit == 2 )
+				this.posicion.x--;
+			else
+				this.orit = 2;
+		}
+		else if( a == Types.ACTIONS.ACTION_RIGHT ){
+			if(this.orit == 0 )
+				this.posicion.x++;
+			else
+				this.orit = 0;
+		}
+
+	}
+
+	private void calcularMapaCalor(StateObservation stateObs){
+		ArrayList<Observation>[] posicionNPC = stateObs.getNPCPositions();
+		ArrayList<Vector2d> posN = new ArrayList<Vector2d>(0);
+
+		int filas = stateObs.getObservationGrid()[0].length;
+		int columnas = stateObs.getObservationGrid().length;
+		this.mapa_calor = new char[filas][columnas];
+		for(int i=0; i<this.mapa_calor.length; i++){
+			for(int j=0; j<this.mapa_calor[i].length; j++){
+				if(tablero[i][j] == 'D' || tablero[i][j] == 'Y')
+					this.mapa_calor[i][j] = '-';
+				else
+					this.mapa_calor[i][j] = tablero[i][j];
+			}
+		}
+		// Auxiliares
+		
+		// Calculo el mapa de calor
+		for(int i=0; i<posicionNPC[0].size(); i++){
+			int x = (int) Math.floor(posicionNPC[0].get(i).position.x / this.escala.x);
+			int y = (int) Math.floor(posicionNPC[0].get(i).position.y / this.escala.y);
+			Vector2d a = new Vector2d(x,y);
+			posN.add(a);
+			this.mapa_calor[(int)a.y][(int)a.x] = '4';
+
+			// Calculo zona de calor
+			if(this.mapa_calor[(int)a.y-1][(int)a.x] != 'X'){
+				this.mapa_calor[(int)a.y-1][(int)a.x] = '3';
+					if(this.mapa_calor[(int)a.y-2][(int)a.x] != 'X'){
+						if(this.mapa_calor[(int)a.y-2][(int)a.x] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y-2][(int)a.x])) < 2 )
+							this.mapa_calor[(int)a.y-2][(int)a.x] = '2';
+						if(this.mapa_calor[(int)a.y-3][(int)a.x] != 'X'){
+							if(this.mapa_calor[(int)a.y-3][(int)a.x] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y-3][(int)a.x])) < 1 )
+								this.mapa_calor[(int)a.y-3][(int)a.x] = '1';
+						}
+					}
+			}
+
+			if(this.mapa_calor[(int)a.y+1][(int)a.x] != 'X'){
+				this.mapa_calor[(int)a.y+1][(int)a.x] = '3';
+					if(this.mapa_calor[(int)a.y+2][(int)a.x] != 'X'){
+						if(this.mapa_calor[(int)a.y+2][(int)a.x] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y+2][(int)a.x])) < 2 )
+							this.mapa_calor[(int)a.y+2][(int)a.x] = '2';
+						if(this.mapa_calor[(int)a.y+3][(int)a.x] != 'X'){
+							if(this.mapa_calor[(int)a.y+3][(int)a.x] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y+3][(int)a.x])) < 1 )
+								this.mapa_calor[(int)a.y+3][(int)a.x] = '1';
+						}
+					}
+			}
+
+			if(this.mapa_calor[(int)a.y][(int)a.x-1] != 'X'){
+				this.mapa_calor[(int)a.y][(int)a.x-1] = '3';
+					if(this.mapa_calor[(int)a.y][(int)a.x-2] != 'X'){
+						if(this.mapa_calor[(int)a.y][(int)a.x-2] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y][(int)a.x-2])) < 2 )
+							this.mapa_calor[(int)a.y][(int)a.x-2] = '2';
+						if(this.mapa_calor[(int)a.y][(int)a.x-3] != 'X'){
+							if(this.mapa_calor[(int)a.y][(int)a.x-3] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y][(int)a.x-3])) < 1 )
+								this.mapa_calor[(int)a.y][(int)a.x-3] = '1';
+						}
+					}
+			}
+
+			if(this.mapa_calor[(int)a.y][(int)a.x+1] != 'X'){
+				this.mapa_calor[(int)a.y][(int)a.x+1] = '3';
+					if(this.mapa_calor[(int)a.y][(int)a.x+2] != 'X'){
+						if(this.mapa_calor[(int)a.y][(int)a.x+2] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y][(int)a.x+2])) < 2 )
+							this.mapa_calor[(int)a.y][(int)a.x+2] = '2';
+						if(this.mapa_calor[(int)a.y][(int)a.x+3] != 'X'){
+							if(this.mapa_calor[(int)a.y][(int)a.x+3] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y][(int)a.x+3])) < 1 )
+								this.mapa_calor[(int)a.y][(int)a.x+3] = '1';
+						}
+					}
+			}
+
+			if(this.mapa_calor[(int)a.y-1][(int)a.x-1] != 'X'){
+				if(this.mapa_calor[(int)a.y-1][(int)a.x-1] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y-1][(int)a.x-1])) < 2 )
+					this.mapa_calor[(int)a.y-1][(int)a.x-1] = '2';
+
+				if(this.mapa_calor[(int)a.y-1][(int)a.x-2] != 'X'){
+					if(this.mapa_calor[(int)a.y-1][(int)a.x-2] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y-1][(int)a.x-2])) < 1 )
+						this.mapa_calor[(int)a.y-1][(int)a.x-2] = '1';
+				}
+				if(this.mapa_calor[(int)a.y-2][(int)a.x-1] != 'X'){
+					if(this.mapa_calor[(int)a.y-2][(int)a.x-1] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y-2][(int)a.x-1])) < 1 )
+						this.mapa_calor[(int)a.y-2][(int)a.x-1] = '1';
+				}
+
+			}
+			if(this.mapa_calor[(int)a.y+1][(int)a.x-1] != 'X'){
+				if(this.mapa_calor[(int)a.y+1][(int)a.x-1] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y+1][(int)a.x-1])) < 2 )
+					this.mapa_calor[(int)a.y+1][(int)a.x-1] = '2';
+
+				if(this.mapa_calor[(int)a.y+2][(int)a.x-1] != 'X'){
+					if(this.mapa_calor[(int)a.y+2][(int)a.x-1] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y+2][(int)a.x-1])) < 1 )
+						this.mapa_calor[(int)a.y+2][(int)a.x-1] = '1';
+				}
+				if(this.mapa_calor[(int)a.y+1][(int)a.x-2] != 'X'){
+					if(this.mapa_calor[(int)a.y+1][(int)a.x-2] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y+1][(int)a.x-2])) < 1 )
+						this.mapa_calor[(int)a.y+1][(int)a.x-2] = '1';
+				}
+	
+			}
+			if(this.mapa_calor[(int)a.y-1][(int)a.x+1] != 'X'){
+				if(this.mapa_calor[(int)a.y-1][(int)a.x+1] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y-1][(int)a.x+1])) < 2 )
+					this.mapa_calor[(int)a.y-1][(int)a.x+1] = '2';
+
+				if(this.mapa_calor[(int)a.y-1][(int)a.x+2] != 'X'){
+					if(this.mapa_calor[(int)a.y-1][(int)a.x+2] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y-1][(int)a.x+2])) < 1 )
+						this.mapa_calor[(int)a.y-1][(int)a.x+2] = '1';
+				}
+				if(this.mapa_calor[(int)a.y-2][(int)a.x+1] != 'X'){
+					if(this.mapa_calor[(int)a.y-2][(int)a.x+1] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y-2][(int)a.x+1])) < 1 )
+						this.mapa_calor[(int)a.y-2][(int)a.x+1] = '1';
+				}
+
+			}
+			if(this.mapa_calor[(int)a.y+1][(int)a.x+1] != 'X'){
+				if(this.mapa_calor[(int)a.y+1][(int)a.x+1] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y+1][(int)a.x+1])) < 2 )
+					this.mapa_calor[(int)a.y+1][(int)a.x+1] = '2';
+
+				if(this.mapa_calor[(int)a.y+2][(int)a.x+1] != 'X'){
+					if(this.mapa_calor[(int)a.y+2][(int)a.x+1] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y+2][(int)a.x+1])) < 1 )
+						this.mapa_calor[(int)a.y+2][(int)a.x+1] = '1';
+				}
+				if(this.mapa_calor[(int)a.y+1][(int)a.x+2] != 'X'){
+					if(this.mapa_calor[(int)a.y+1][(int)a.x+2] == '-' || Integer.parseInt(String.valueOf(this.mapa_calor[(int)a.y+1][(int)a.x+2])) < 1 )
+						this.mapa_calor[(int)a.y+1][(int)a.x+2] = '1';
+				}
+			}
+
+		}
+
+		for( int i=0; i<this.mapa_calor.length; i++){
+			for(int j=0; j<this.mapa_calor[i].length; j++){
+				System.out.print(this.mapa_calor[i][j]);
+			}
+			System.out.print('\n');
+		}
+
 	}
 }

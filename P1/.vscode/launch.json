@@ -1,0 +1,140 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug (Launch) - Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-AgentExecutor<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "core.competition.AgentExecutor",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-AgentExecutorMulti<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "core.competition.AgentExecutorMulti",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-GVGExecutor<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "core.competition.GVGExecutor",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-GVGReplayer<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "core.competition.GVGReplayer",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-LearnerExecutor<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "core.competition.LearnerExecutor",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-prueba<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "prueba",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-ErrorTestingMultiplayer<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "testing.ErrorTestingMultiplayer",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-ErrorTestingSingleplayer<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "testing.ErrorTestingSingleplayer",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-OptClearJar<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "tools.OptClearJar",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-OptEvaluateJar<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "tools.OptEvaluateJar",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-TestGameSpace<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "tracks.gameDesign.TestGameSpace",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-TestMultiGameSpace<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "tracks.gameDesign.TestMultiGameSpace",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-TestLevelGeneration<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "tracks.levelGeneration.TestLevelGeneration",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-TestMultiPlayer<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "tracks.multiPlayer.TestMultiPlayer",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-TestRuleGeneration<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "tracks.ruleGeneration.TestRuleGeneration",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-TestSingleLearning<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "tracks.singleLearning.TestSingleLearning",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-JavaServer<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "tracks.singleLearning.utils.JavaServer",
+            "projectName": "P1_18eddc85"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-Test<P1_18eddc85>",
+            "request": "launch",
+            "mainClass": "tracks.singlePlayer.Test",
+            "projectName": "P1_18eddc85"
+        }
+    ]
+}
