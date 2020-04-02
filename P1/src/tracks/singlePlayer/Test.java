@@ -26,7 +26,7 @@ public class Test {
 		String sampleOLETSController = "tracks.singlePlayer.advanced.olets.Agent";
 
 		// Mi agente
-		String myAgent = "tracks.singlePlayer.simple.myAgent";
+		String myAgent = "tracks.singlePlayer.simple.Agent";
 
 		//Load available games
 		String spGamesCollection =  "examples/all_games_sp.csv";
@@ -38,7 +38,7 @@ public class Test {
 
 		// Game and level to play
 		int gameIdx = 11;
-		int levelIdx = 9; // level names from 0 to 4 (game_lvlN.txt).
+		int levelIdx = 7; // level names from 0 to 4 (game_lvlN.txt).
 		String gameName = games[gameIdx][1];
 		String game = games[gameIdx][0];
 		String level1 = game.replace(gameName, gameName + "_lvl" + levelIdx);

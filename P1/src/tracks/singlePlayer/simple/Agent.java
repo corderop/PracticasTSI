@@ -10,7 +10,7 @@ import tools.Vector2d;
 
 import java.util.*;
 
-public class myAgent extends AbstractPlayer{
+public class Agent extends AbstractPlayer{
 
 	// Lista de abiertos y cerrados
 	private PriorityQueue<Nodo> abiertos, cerrados;
@@ -49,7 +49,7 @@ public class myAgent extends AbstractPlayer{
 	 * @param stateObs Observation of the current state.
      * @param elapsedTimer Timer when the action returned is due.
 	 */
-	public myAgent(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
+	public Agent(StateObservation stateObs, ElapsedCpuTimer elapsedTimer){
 
 		// DIBUJAMOS EL MAPA-------------------------
 
@@ -282,6 +282,7 @@ public class myAgent extends AbstractPlayer{
 			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '-'){
 				salida.add(Types.ACTIONS.ACTION_DOWN);
 			}
+			// Situación especial 1
 			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == 'X'){
 				if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == 'X'){
 					// Muro arriba y a la derecha
@@ -340,6 +341,31 @@ public class myAgent extends AbstractPlayer{
 			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '1'){
 				salida.add(Types.ACTIONS.ACTION_DOWN);
 			}
+			else if(this.orit == 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '2'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(this.orit == 1 && mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '2'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(this.orit == 2 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '2'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(this.orit == 3 && mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '2'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '2'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '2'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '2'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '2'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+			// Situación especial 2
 			else if(this.orit != 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '3'){
 				salida.add(Types.ACTIONS.ACTION_RIGHT);
 			}
@@ -388,6 +414,30 @@ public class myAgent extends AbstractPlayer{
 				salida.add(Types.ACTIONS.ACTION_LEFT);
 			}
 			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '2'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+			else if(this.orit == 0 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '3'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(this.orit == 1 && mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '3'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(this.orit == 2 && mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '3'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(this.orit == 3 && mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '3'){
+				salida.add(Types.ACTIONS.ACTION_DOWN);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x+1] == '3'){
+				salida.add(Types.ACTIONS.ACTION_RIGHT);
+			}
+			else if(mapa_calor[(int)this.posicion.y-1][(int)this.posicion.x] == '3'){
+				salida.add(Types.ACTIONS.ACTION_UP);
+			}
+			else if(mapa_calor[(int)this.posicion.y][(int)this.posicion.x-1] == '3'){
+				salida.add(Types.ACTIONS.ACTION_LEFT);
+			}
+			else if(mapa_calor[(int)this.posicion.y+1][(int)this.posicion.x] == '3'){
 				salida.add(Types.ACTIONS.ACTION_DOWN);
 			}
 		}
@@ -661,7 +711,7 @@ public class myAgent extends AbstractPlayer{
 		public Objetivo(ArrayList<Integer> dia){
 			this.rest = new ArrayList<Integer>(dia);
 			this.d = new ArrayList<Integer>();
-			this.obj = myAgent.this.diamantes_pend+1;
+			this.obj = Agent.this.diamantes_pend+1;
 			this.g = 0;
 			this.heuristica();
 		}
@@ -679,9 +729,9 @@ public class myAgent extends AbstractPlayer{
 
 			if(i >= 0){
 				if(salida.d.size() > 0)
-					salida.g += myAgent.this.distancias[d.get(d.size()-1)][i];
+					salida.g += Agent.this.distancias[d.get(d.size()-1)][i];
 				else
-					salida.g += myAgent.this.dist_personaje[i];
+					salida.g += Agent.this.dist_personaje[i];
 
 				salida.rest.remove(Integer.valueOf(i));
 				salida.obj--;
@@ -690,7 +740,7 @@ public class myAgent extends AbstractPlayer{
 			}
 			else{
 				// Primer hijo
-				salida.g += myAgent.this.dist_final[d.get(d.size()-1)];
+				salida.g += Agent.this.dist_final[d.get(d.size()-1)];
 				salida.h = 0;
 				salida.obj--;
 			}
@@ -699,7 +749,7 @@ public class myAgent extends AbstractPlayer{
 		}
 
 		private void heuristica(){
-			this.h = myAgent.this.media*this.obj;
+			this.h = Agent.this.media*this.obj;
 		}
 
 		// Comparar para ordenar en la priority queue
@@ -880,6 +930,12 @@ public class myAgent extends AbstractPlayer{
 				}
 			}
 
+		}
+		for( int i=0; i<mapa_calor.length; i++){
+			for(int j=0; j<mapa_calor[i].length; j++){
+				System.out.print(mapa_calor[i][j]);
+			}
+			System.out.print('\n');
 		}
 	}
 }
