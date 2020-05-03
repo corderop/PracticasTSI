@@ -2,14 +2,15 @@ include "globals.mzn";
 
 % Para cada tarea 1->Comienzo, 2->Final
 % Filas: 1->A, 2->B, 3->C...
-array[1..9,1..2] of var int: tiempos;
+array[1..9,1..3] of var int: tiempos;
 var int: t;
 
-constraint forall(i in 1..9)( tiempos[i,1]>=0 /\ tiempos[i,2]>=0 );
+constraint forall(i in 1..9)( tiempos[i,1]>=0 /\ tiempos[i,2]>=0 /\ tiempos[i,3]>=1 /\ tiempos[i,3]<=3);
 
 % Duración de cada una
 
-constraint tiempos[1,2]-tiempos[1,1]==7; % A
+% A
+constraint (tiempos[1,3]==1 \/ tiempos[1,2]-tiempos[1,1]==4) \/ (tiempos[1,3]==2 \/ tiempos[1,2]-tiempos[1,1]==7) \/ (tiempos[1,3]==3 \/ tiempos[1,2]-tiempos[1,1]==10); 
 constraint tiempos[2,2]-tiempos[2,1]==3; % B
 constraint tiempos[3,2]-tiempos[3,1]==1; % C
 constraint tiempos[4,2]-tiempos[4,1]==8; % D

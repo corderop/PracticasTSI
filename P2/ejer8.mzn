@@ -2,10 +2,28 @@ include "globals.mzn";
 
 % Para cada tarea 1->Comienzo, 2->Final
 % Filas: 1->A, 2->B, 3->C...
-array[1..9,1..2] of var int: tiempos;
+array[1..9,1..5] of var int: tiempos;
+% array[0..28] of var 0..3: ocupados;
 var int: t;
 
-constraint forall(i in 1..9)( tiempos[i,1]>=0 /\ tiempos[i,2]>=0 );
+constraint forall(i in 1..9)( tiempos[i,1]>=0 /\ tiempos[i,2]>=0 /\ tiempos[i,3]>=0 /\ tiempos[i,3]<=1 /\ tiempos[i,4]>=0 /\ tiempos[i,4]<=1 /\ tiempos[i,5]>=0 /\ tiempos[i,5]<=1 );
+
+% 
+% constraint forall(i,j,h in 1..9)( tiempos[i,1]>=tiempos[j,2] \/ tiempos[h,1]<tiempos[j,2] \/ ( tiempos[i,1]<tiempos[j,2] /\ tiempos[h,1]<tiempos[j,2] /\ tiempos[i,3]+tiempos[j,3]+tiempos[h,3]<=3 ) );
+% constraint forall(i in 1..9)( [ | j in tiempo[i,1] )
+constraint (tiempos[1,3]+tiempos[1,4]+tiempos[1,5])==2;
+constraint (tiempos[2,3]+tiempos[2,4]+tiempos[2,5])==3;
+constraint (tiempos[3,3]+tiempos[3,4]+tiempos[3,5])==2;
+constraint (tiempos[4,3]+tiempos[4,4]+tiempos[4,5])==2;
+constraint (tiempos[5,3]+tiempos[5,4]+tiempos[5,5])==1;
+constraint (tiempos[6,3]+tiempos[6,4]+tiempos[6,5])==2;
+constraint (tiempos[7,3]+tiempos[7,4]+tiempos[7,5])==1;
+constraint (tiempos[8,3]+tiempos[8,4]+tiempos[8,5])==1;
+constraint (tiempos[9,3]+tiempos[9,4]+tiempos[9,5])==2;
+
+constraint forall( i,j in 1..9 )( ( tiempos[i,3]==0 \/ tiempos[j,3]==0 \/ tiempos[j,2]<=tiempos[i,1] \/ tiempos[i,2]<=tiempos[j,1] ) /\
+                                  ( tiempos[i,4]==0 \/ tiempos[j,4]==0 \/ tiempos[j,2]<=tiempos[i,1] \/ tiempos[i,2]<=tiempos[j,1] ) /\ 
+                                  ( tiempos[i,5]==0 \/ tiempos[j,5]==0 \/ tiempos[j,2]<=tiempos[i,1] \/ tiempos[i,2]<=tiempos[j,1] ));
 
 % Duración de cada una
 
