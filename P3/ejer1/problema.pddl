@@ -7,10 +7,6 @@
         centrodemando1 barracon1 - edificio
     )
     (:init
-        ; Comenzamos sin recuros
-        (= (cantidad Minerales) 0)
-        (= (cantidad Gas) 0)
-
         (recurso_edificio Minerales Barracones)
         (recurso_edificio Gas CentroDeMando)
 
@@ -26,7 +22,6 @@
         (en_un vce2 T1_5)
         (en_un vce3 T3_1)
         (en_ed centrodemando1 T4_4)
-        (en_ed barracon1 T5_1)
         (nodo_recurso Minerales T2_1)
         (nodo_recurso Minerales T2_5)
         (nodo_recurso Minerales T3_2)
@@ -37,9 +32,6 @@
         (libre vce1)
         (libre vce2)
         (libre vce3)
-
-        ; Declaro construido el centro de mando
-        (construido centrodemando1)
 
         ; Tablero
         (conectado T1_1 T1_2)
@@ -126,10 +118,40 @@
         (conectado T5_4 T5_5)
         (conectado T5_5 T4_5)
         (conectado T5_5 T5_4)
+
+        ; Declaro las casillas vacias menos donde hay edificios
+        (vacia T1_1)
+        (vacia T1_2)
+        (vacia T1_3)
+        (vacia T1_4)
+        (vacia T1_5)
+
+        (vacia T2_1)
+        (vacia T2_2)
+        (vacia T2_3)
+        (vacia T2_4)
+        (vacia T2_5)
+
+        (vacia T3_1)
+        (vacia T3_2)
+        (vacia T3_3)
+        (vacia T3_4)
+        (vacia T3_5)
+
+        (vacia T4_1)
+        (vacia T4_2)
+        (vacia T4_3)
+        (vacia T4_5)
+
+        (vacia T5_1)
+        (vacia T5_2)
+        (vacia T5_3)
+        (vacia T5_4)
+        (vacia T5_5)
     )
     (:goal
         (and
-            (construido barracon1)
+            (en_ed barracon1 T5_5)
         )
     )
 )

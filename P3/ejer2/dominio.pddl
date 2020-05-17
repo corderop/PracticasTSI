@@ -24,9 +24,6 @@
         ; Indica en que casilla se encuentra un nodo recurso y de que tipo es
         (nodo_recurso ?r - recurso ?x - casilla)
 
-        ; Indica si un edificio está construido
-        (construido ?e - edificio)
-
         ; Indica dos casillas adyacentes
         (conectado ?x1 - casilla ?x2 - casilla)
 
@@ -38,10 +35,9 @@
 
         ; Minerales para cada edificio
         (recurso_edificio ?r - recurso ?e - tipoEdificio)
-    )
 
-    (:functions 
-        (cantidad ?r - recurso)
+        ; No hay ningun edificio en una casilla
+        (vacia ?x - casilla)
     )
     
     (:action navegar
@@ -68,32 +64,26 @@
             )
         :effect
             (and
-                (not (nodo_recurso ?r ?x))
                 (not (libre ?u))
-                (increase (cantidad ?r) 1)
                 (extrayendo ?u ?r)
             )
     )
 
     (:action construir
-        :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla ?r - recurso)
+        :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla ?u_ext - unidad ?r - recurso)
         :precondition
             (and
                 (en_un ?u ?x)
-                (en_ed ?e ?x)
                 (libre ?u)
                 (esTipo_e ?e ?t)
                 (recurso_edificio ?r ?t)
-                (>=
-                    (cantidad ?r)
-                    1
-                )
+                (extrayendo ?u_ext ?r)
+                (vacia ?x)
             )
         :effect
             (and
-                (construido ?e)
-                (not (libre ?u))
-                (decrease (cantidad ?r) 1)
+                (en_ed ?e ?x)
+                (not (vacia ?x))
             )
     )
     
