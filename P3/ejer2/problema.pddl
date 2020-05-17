@@ -4,11 +4,12 @@
         vce1 - unidad
         vce2 - unidad
         vce3 - unidad
-        centrodemando1 barracon1 - edificio
+        centrodemando1 barracon1 extractor1 - edificio
     )
     (:init
         (recurso_edificio Minerales Barracones)
         (recurso_edificio Gas CentroDeMando)
+        (recurso_edificio Minerales Extractor)
 
         ; Declaro los tipos
         (esTipo_u vce1 VCE)
@@ -16,6 +17,7 @@
         (esTipo_u vce3 VCE)
         (esTipo_e centrodemando1 CentroDeMando)
         (esTipo_e barracon1 Barracones)
+        (esTipo_e extractor1 Extractor)
 
         ; Declaro posiciones
         (en_un vce1 T1_2)
