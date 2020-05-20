@@ -7,10 +7,18 @@
 
     (:constants 
         VCE Marine Segador - tipoUnidad
-        CentroDeMando Barracones Extractor BahiaDeIngenieria - tipoEdificio
+        CentroDeMando Barracones Extractor BahiaDeIngenieria Deposito - tipoEdificio
         Minerales Gas - recurso
         ImpulsorSegador - investigacion
         T1_1 T1_2 T1_3 T1_4 T1_5 T2_1 T2_2 T2_3 T2_4 T2_5 T3_1 T3_2 T3_3 T3_4 T3_5 T4_1 T4_2 T4_3 T4_4 T4_5 T5_1 T5_2 T5_3 T5_4 T5_5 - casilla
+    )
+
+    (:functions
+        (cantidad ?r - recurso)
+        (limite ?r - recurso)
+        (coste_e ?r - recurso ?i - tipoEdificio)
+        (coste_u ?r - recurso ?u - tipoUnidad)
+        (coste_i ?r - recurso ?u - investigacion)
     )
 
     (:predicates
@@ -35,14 +43,14 @@
         (extrayendo ?u - unidad ?r - recurso)
 
         ; Indicar que un recurso está disponible
-        (disponible ?r - recurso)
+        ; (disponible ?r - recurso)
 
-        ; Recursos para cada edificio
-        (recurso_edificio ?r - recurso ?e - tipoEdificio)
-        ; Recursos para cada unidad
-        (recurso_unidad ?r - recurso ?u - tipoUnidad)
-        ; Recurso para una investigación
-        (recurso_investigacion ?r - recurso ?i - investigacion)
+        ; ; Recursos para cada edificio
+        ; (recurso_edificio ?r - recurso ?e - tipoEdificio)
+        ; ; Recursos para cada unidad
+        ; (recurso_unidad ?r - recurso ?u - tipoUnidad)
+        ; ; Recurso para una investigación
+        ; (recurso_investigacion ?r - recurso ?i - investigacion)
         ; Donde se recluta cada unidad
         (lugar_reclutamiento ?u - tipoUnidad ?e - tipoEdificio)
 
@@ -51,7 +59,7 @@
 
         ; Comparar recursos
         (Gas ?r - recurso)
-        (Minerales ?r - recurso)
+        ; (Minerales ?r - recurso)
 
         ; Comparar tipos de unidades
         (Segador ?tu)
@@ -75,14 +83,14 @@
             )
     )
 
-    (:action obtenerRecurso
+    (:action asignarNodoRecursos
         :parameters (?u - unidad ?r - recurso ?x - casilla)
-        :precondition
-            (and
+        :precondition 
+            (and 
                 (en_un ?u ?x)
                 (libre ?u)
                 (nodo_recurso ?r ?x)
-                ; Compruebo que si es gas exista un extractor en el nodo
+                ; Si es un nodo de gas debe de haber un extractor
                 (or
                     (not (Gas ?r))
                     (exists (?e - edificio)
@@ -91,13 +99,47 @@
                             (esTipo_e ?e Extractor)
                         )
                     )
-                )    
+                )
+            )
+        :effect 
+            (and 
+                (not (libre ?u))
+                (extrayendo ?u ?r)
+            )
+    )
+    
+    (:action recolectarRecursos
+        :parameters (?u - unidad ?r - recurso)
+        :precondition
+            (and
+                (extrayendo ?u ?r)
+                ; No puede sobrepasar el límite
+                (<=
+                    (+
+                        (cantidad ?r)
+                        10
+                    )
+                    (limite ?r)
+                )                
             )
         :effect
             (and
+                ; Incrementar gas o minerales
+                (increase (cantidad ?r) 10)
+            )
+    )
+
+    (:action desasignar
+        :parameters (?u - unidad ?r - recurso)
+        :precondition
+            (and
                 (not (libre ?u))
                 (extrayendo ?u ?r)
-                (disponible ?r)
+            )
+        :effect
+            (and
+                (libre ?u)
+                (not (extrayendo ?u ?r))
             )
     )
 
@@ -109,9 +151,11 @@
                 (libre ?u)
                 (esTipo_e ?e ?t)
                 (forall (?r - recurso)
-                    (or
-                        (not (recurso_edificio ?r ?t))
-                        (disponible ?r)
+                    (and
+                        (>=
+                            (cantidad ?r)
+                            (coste_e ?r ?t)
+                        )
                     )
                 )
                 ; Compruebo que no se construya un extractor 
@@ -137,6 +181,17 @@
             (and
                 (en_ed ?e ?x)
                 (not (vacia ?x))
+                (forall (?r - recurso)
+                    (and
+                        (decrease (cantidad ?r) (coste_e ?r ?t))
+                    )
+                )
+                (when (and (esTipo_e ?e Deposito))
+                    (and
+                        (increase (limite Gas) 100)
+                        (increase (limite Minerales) 100)
+                    )
+                )
             )
     )
 
@@ -146,9 +201,11 @@
             (and
                 (esTipo_u ?u ?tu)
                 (forall (?r - recurso)
-                    (or
-                        (not (recurso_unidad ?r ?tu))
-                        (disponible ?r)
+                    (and
+                        (>=
+                            (cantidad ?r)
+                            (coste_u ?r ?tu)
+                        )
                     )
                 )
                 ; Compruebo si se va a reclutar un segador si está investigado
@@ -169,6 +226,11 @@
             (and
                 (en_un ?u ?x)
                 (libre ?u)
+                (forall (?r - recurso)
+                    (and
+                        (decrease (cantidad ?r) (coste_u ?r ?tu))
+                    )
+                )
             )
     )
 
@@ -176,7 +238,9 @@
         :parameters ( ?i - investigacion ?x - casilla)
         :precondition
             (and
-                (exists (?e - edificio) 
+                ; No puede existir ya la investigacion
+                (not (investigado ?i))
+                (exists (?e - edificio ) 
                     (and
                         (en_ed ?e ?x)
                         (esTipo_e ?e BahiaDeIngenieria)
@@ -184,17 +248,22 @@
                 )
                 ; Compruebo que se tienen todos los recursos
                 (forall (?r - recurso)
-                    (or
-                        (not (recurso_investigacion ?r ?i))
-                        (disponible ?r)
+                    (and
+                        (>=
+                            (cantidad ?r)
+                            (coste_i ?r ?i)
+                        )
                     )
                 )
-                ; No puede existir ya la investigacion
-                (not (investigado ?i))
             )
         :effect
             (and
                 (investigado ?i)
+                (forall (?r - recurso)
+                    (and
+                        (decrease (cantidad ?r) (coste_i ?r ?i))
+                    )
+                )
             )
     )
     

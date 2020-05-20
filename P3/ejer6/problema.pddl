@@ -1,38 +1,58 @@
 (define (problem ejer6_p)
     (:domain ejer6)
     (:objects
-        vce1 vce2 - unidad
+        vce1 - unidad
         marine1 marine2 - unidad
         segador1 - unidad
-        centrodemando1 barracon1 extractor1 bdi1 - edificio
+        centrodemando1 barracon1 extractor1 bdi1 d1 - edificio
     )
     (:init
-        (recurso_edificio Minerales Barracones)
-        (recurso_edificio Minerales CentroDeMando)
-        (recurso_edificio Gas CentroDeMando)
-        (recurso_edificio Minerales Extractor)
-        (recurso_edificio Minerales BahiaDeIngenieria)
+        ; Inicializo las funciones
+        (= (cantidad Gas) 0)
+        (= (cantidad Minerales) 0)
 
-        (recurso_unidad Minerales Marine)
-        (recurso_unidad Minerales VCE)
-        (recurso_unidad Gas Segador)
-        (recurso_unidad Minerales Segador)
+        (= (limite Gas) 100)
+        (= (limite Minerales) 100)
 
-        (recurso_investigacion Gas ImpulsorSegador)
-        (recurso_investigacion Minerales ImpulsorSegador)
+        (= (coste_e Minerales CentroDeMando) 150)
+        (= (coste_e Gas CentroDeMando) 50)
+
+        (= (coste_e Minerales Barracones) 150)
+        (= (coste_e Gas Barracones) 0)
+
+        (= (coste_e Minerales Extractor) 75)
+        (= (coste_e Gas Extractor) 0)
+
+        (= (coste_e Minerales BahiaDeIngenieria) 125)
+        (= (coste_e Gas BahiaDeIngenieria) 0)
+
+        (= (coste_e Minerales Deposito) 75)
+        (= (coste_e Gas Deposito) 25)
+
+        (= (coste_u Minerales VCE) 50)
+        (= (coste_u Gas VCE) 0)
+
+        (= (coste_u Minerales Marine) 50)
+        (= (coste_u Gas Marine) 0)
+
+        (= (coste_u Minerales Segador) 50)
+        (= (coste_u Gas Segador) 50)
+
+        (= (coste_i Minerales ImpulsorSegador) 50)
+        (= (coste_i Gas ImpulsorSegador) 100)
 
         (lugar_reclutamiento VCE CentroDeMando)
         (lugar_reclutamiento Marine Barracones)
         (lugar_reclutamiento Segador Barracones)
 
         (Gas Gas)
-        (Minerales Minerales)
+        ; (Minerales Minerales)
 
         (Segador Segador)
 
         ; Declaro los tipos
         (esTipo_u vce1 VCE)
-        (esTipo_u vce2 VCE)
+        ; (esTipo_u vce2 VCE)
         (esTipo_u marine1 Marine)
         (esTipo_u marine2 Marine)
         (esTipo_u segador1 Segador)
@@ -40,10 +60,14 @@
         (esTipo_e barracon1 Barracones)
         (esTipo_e extractor1 Extractor)
         (esTipo_e bdi1 BahiaDeIngenieria)
+        (esTipo_e d1 Deposito)
+        ; (esTipo_e d2 Deposito)
+        ; (esTipo_e d3 Deposito)
 
         ; Declaro posiciones
         (en_un vce1 T3_4)
         (en_ed centrodemando1 T4_4)
+        (en_ed bdi1 T5_4)
         (nodo_recurso Minerales T2_1)
         (nodo_recurso Minerales T2_5)
         (nodo_recurso Minerales T3_2)
@@ -174,6 +198,8 @@
             (en_un marine1 T5_1)
             (en_un marine2 T4_2)
             (en_un segador1 T4_2)
+            ; (investigado ImpulsorSegador)
+            ; (en_ed bdi1 T4_2)
         )
     )
 )
