@@ -74,7 +74,7 @@
     )
 
     (:action construir
-        :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla ?u_ext - unidad ?r - recurso)
+        :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla ?r - recurso)
         :precondition
             (and
                 (en_un ?u ?x)
@@ -83,6 +83,10 @@
                 (recurso_edificio ?r ?t)
                 (disponible ?r)
                 (vacia ?x)
+                ; No construye dos veces el mismo edificio
+                (not (exists (?x_aux - casilla) 
+                    (en_ed ?e ?x_aux) 
+                ))
             )
         :effect
             (and

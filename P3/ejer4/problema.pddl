@@ -1,7 +1,7 @@
 (define (problem ejer1_p)
     (:domain ejer1)
     (:objects
-        vce1 - unidad
+        vce1 vce2 - unidad
         marine1 marine2 - unidad
         segador1 - unidad
         centrodemando1 barracon1 extractor1 - edificio
@@ -20,6 +20,9 @@
         (lugar_reclutamiento VCE CentroDeMando)
         (lugar_reclutamiento Marine Barracones)
         (lugar_reclutamiento Segador Barracones)
+
+        (Gas Gas)
+        (Minerales Minerales)
 
         ; Declaro los tipos
         (esTipo_u vce1 VCE)

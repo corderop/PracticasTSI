@@ -11,6 +11,9 @@
         (recurso_edificio Gas CentroDeMando)
         (recurso_edificio Minerales Extractor)
 
+        (Gas Gas)
+        (Minerales Minerales)
+
         ; Declaro los tipos
         (esTipo_u vce1 VCE)
         (esTipo_u vce2 VCE)

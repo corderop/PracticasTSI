@@ -41,6 +41,10 @@
 
         ; No hay ningun edificio en una casilla
         (vacia ?x - casilla)
+
+        ; Comparar recursos
+        (Gas ?r - recurso)
+        (Minerales ?r - recurso)
     )
     
     (:action navegar
@@ -57,37 +61,30 @@
             )
     )
 
-    (:action obtenerGas
-        :parameters (?u - unidad ?x - casilla ?e - edificio)
+    (:action obtenerRecurso
+        :parameters (?u - unidad ?r - recurso ?x - casilla)
         :precondition
             (and
                 (en_un ?u ?x)
                 (libre ?u)
-                (nodo_recurso Gas ?x)
-                (en_ed ?e ?x)
-                (esTipo_e ?e Extractor)
+                (nodo_recurso ?r ?x)
+                ; Compruebo que si es gas exista un extractor en el nodo
+                (or
+                    (not (Gas ?r))
+                    (exists (?e - edificio)
+                        (and
+                            (en_ed ?e ?x)
+                            (esTipo_e ?e Extractor)
+                        )
+                    )
+                )
+                
             )
         :effect
             (and
                 (not (libre ?u))
-                (extrayendo ?u Gas)
-                (disponible Gas)
-            )
-    )
-
-    (:action obtenerMineral
-        :parameters (?u - unidad ?x - casilla)
-        :precondition
-            (and
-                (en_un ?u ?x)
-                (libre ?u)
-                (nodo_recurso Minerales ?x)
-            )
-        :effect
-            (and
-                (not (libre ?u))
-                (extrayendo ?u Minerales)
-                (disponible Minerales)
+                (extrayendo ?u ?r)
+                (disponible ?r)
             )
     )
 
@@ -101,6 +98,10 @@
                 (recurso_edificio ?r ?t)
                 (disponible ?r)
                 (vacia ?x)
+                ; No construye dos veces el mismo edificio
+                (not (exists (?x_aux - casilla) 
+                    (en_ed ?e ?x_aux) 
+                ))
             )
         :effect
             (and
@@ -109,15 +110,32 @@
             )
     )
 
-    (:action construirExtractor
-        :parameters (?u - unidad ?e - edificio ?x - casilla)
+    (:action construir
+        :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla)
         :precondition
             (and
                 (en_un ?u ?x)
                 (libre ?u)
-                (esTipo_e ?e Extractor)
-                (disponible Minerales)
-                (nodo_recurso Gas ?x)
+                (esTipo_e ?e ?t)
+                (forall (?r - recurso)
+                    (or
+                        (not (recurso_edificio ?r ?t))
+                        (disponible ?r)
+                    )
+                )
+                ; Compruebo que no se construya un extractor 
+                ; cuando no es un nodo de Gas y compruebo que si
+                ; es un nodo de gas no se pueda construir otra cosa
+                (or
+                    (and
+                        (esTipo_e ?e Extractor)
+                        (nodo_recurso Gas ?x)
+                    )
+                    (and
+                        (not (esTipo_e ?e Extractor))
+                        (not (nodo_recurso Gas ?x))
+                    )
+                )
                 (vacia ?x)
             )
         :effect
