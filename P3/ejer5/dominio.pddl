@@ -1,14 +1,15 @@
 (define (domain ejer5)
     (:requirements :strips :typing :adl :fluents)
     (:types
-        unidad edificio recurso casilla - object
+        unidad edificio recurso casilla investigacion - object
         tipoUnidad tipoEdificio - object
     )
 
     (:constants 
         VCE Marine Segador - tipoUnidad
-        CentroDeMando Barracones Extractor - tipoEdificio
+        CentroDeMando Barracones Extractor BahiaDeIngenieria - tipoEdificio
         Minerales Gas - recurso
+        ImpulsorSegador - investigacion
         T1_1 T1_2 T1_3 T1_4 T1_5 T2_1 T2_2 T2_3 T2_4 T2_5 T3_1 T3_2 T3_3 T3_4 T3_5 T4_1 T4_2 T4_3 T4_4 T4_5 T5_1 T5_2 T5_3 T5_4 T5_5 - casilla
     )
 
@@ -40,6 +41,8 @@
         (recurso_edificio ?r - recurso ?e - tipoEdificio)
         ; Recursos para cada unidad
         (recurso_unidad ?r - recurso ?u - tipoUnidad)
+        ; Recurso para una investigación
+        (recurso_investigacion ?r - recurso ?i - investigacion)
         ; Donde se recluta cada unidad
         (lugar_reclutamiento ?u - tipoUnidad ?e - tipoEdificio)
 
@@ -49,6 +52,12 @@
         ; Comparar recursos
         (Gas ?r - recurso)
         (Minerales ?r - recurso)
+
+        ; Comparar tipos de unidades
+        (Segador ?tu)
+
+        ; Cosa que están investigadas
+        (investigado ?i - investigacion)
     )
     
     (:action navegar
@@ -142,6 +151,12 @@
                         (disponible ?r)
                     )
                 )
+                ; Compruebo si se va a reclutar un segador si está investigado
+                (or
+                    (not (Segador ?tu))
+                    (investigado ImpulsorSegador)
+                )   
+
                 (en_ed ?e ?x)
                 (esTipo_e ?e ?t)
                 (lugar_reclutamiento ?tu ?t)
@@ -154,6 +169,32 @@
             (and
                 (en_un ?u ?x)
                 (libre ?u)
+            )
+    )
+
+    (:action investigar
+        :parameters ( ?i - investigacion ?x - casilla)
+        :precondition
+            (and
+                (exists (?e - edificio) 
+                    (and
+                        (en_ed ?e ?x)
+                        (esTipo_e ?e BahiaDeIngenieria)
+                    )
+                )
+                ; Compruebo que se tienen todos los recursos
+                (forall (?r - recurso)
+                    (or
+                        (not (recurso_investigacion ?r ?i))
+                        (disponible ?r)
+                    )
+                )
+                ; No puede existir ya la investigacion
+                (not (investigado ?i))
+            )
+        :effect
+            (and
+                (investigado ?i)
             )
     )
     

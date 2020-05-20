@@ -4,18 +4,22 @@
         vce1 vce2 - unidad
         marine1 marine2 - unidad
         segador1 - unidad
-        centrodemando1 barracon1 extractor1 - edificio
+        centrodemando1 barracon1 extractor1 bdi1 - edificio
     )
     (:init
         (recurso_edificio Minerales Barracones)
         (recurso_edificio Minerales CentroDeMando)
         (recurso_edificio Gas CentroDeMando)
         (recurso_edificio Minerales Extractor)
+        (recurso_edificio Minerales BahiaDeIngenieria)
 
         (recurso_unidad Minerales Marine)
         (recurso_unidad Minerales VCE)
         (recurso_unidad Gas Segador)
         (recurso_unidad Minerales Segador)
+
+        (recurso_investigacion Gas ImpulsorSegador)
+        (recurso_investigacion Minerales ImpulsorSegador)
 
         (lugar_reclutamiento VCE CentroDeMando)
         (lugar_reclutamiento Marine Barracones)
@@ -23,6 +27,8 @@
 
         (Gas Gas)
         (Minerales Minerales)
+
+        (Segador Segador)
 
         ; Declaro los tipos
         (esTipo_u vce1 VCE)
@@ -33,6 +39,7 @@
         (esTipo_e centrodemando1 CentroDeMando)
         (esTipo_e barracon1 Barracones)
         (esTipo_e extractor1 Extractor)
+        (esTipo_e bdi1 BahiaDeIngenieria)
 
         ; Declaro posiciones
         (en_un vce1 T3_4)
