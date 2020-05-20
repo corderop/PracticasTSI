@@ -33,6 +33,9 @@
         ; Indicar si un vce está extrayendo un recurso
         (extrayendo ?u - unidad ?r - recurso)
 
+        ; Indicar que un recurso está disponible
+        (disponible ?r - recurso)
+
         ; Minerales para cada edificio
         (recurso_edificio ?r - recurso ?e - tipoEdificio)
 
@@ -68,6 +71,7 @@
             (and
                 (not (libre ?u))
                 (extrayendo ?u Gas)
+                (disponible Gas)
             )
     )
 
@@ -83,11 +87,12 @@
             (and
                 (not (libre ?u))
                 (extrayendo ?u Minerales)
+                (disponible Minerales)
             )
     )
 
     (:action construir
-        :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla ?u_ext - unidad)
+        :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla)
         :precondition
             (and
                 (en_un ?u ?x)
@@ -96,7 +101,7 @@
                 (forall (?r - recurso)
                     (or
                         (not (recurso_edificio ?r ?t))
-                        (extrayendo ?u_ext ?r)
+                        (disponible ?r)
                     )
                 )
                 (vacia ?x)
@@ -109,18 +114,13 @@
     )
 
     (:action construirExtractor
-        :parameters (?u - unidad ?e - edificio ?x - casilla ?u_ext - unidad ?r - recurso)
+        :parameters (?u - unidad ?e - edificio ?x - casilla)
         :precondition
             (and
                 (en_un ?u ?x)
                 (libre ?u)
                 (esTipo_e ?e Extractor)
-                (forall (?r - recurso)
-                    (or
-                        (not (recurso_edificio ?r Extractor))
-                        (extrayendo ?u_ext ?r)
-                    )
-                )
+                (disponible Gas)
                 (nodo_recurso Gas ?x)
                 (vacia ?x)
             )

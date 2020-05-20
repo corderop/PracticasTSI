@@ -6,7 +6,7 @@
     )
 
     (:constants 
-        VCE - tipoUnidad
+        VCE Marine Segador - tipoUnidad
         CentroDeMando Barracones Extractor - tipoEdificio
         Minerales Gas - recurso
         T1_1 T1_2 T1_3 T1_4 T1_5 T2_1 T2_2 T2_3 T2_4 T2_5 T3_1 T3_2 T3_3 T3_4 T3_5 T4_1 T4_2 T4_3 T4_4 T4_5 T5_1 T5_2 T5_3 T5_4 T5_5 - casilla
@@ -36,8 +36,12 @@
         ; Indicar que un recurso está disponible
         (disponible ?r - recurso)
 
-        ; Minerales para cada edificio
+        ; Recursos para cada edificio
         (recurso_edificio ?r - recurso ?e - tipoEdificio)
+        ; Recursos para cada unidad
+        (recurso_unidad ?r - recurso ?u - tipoUnidad)
+        ; Donde se recluta cada unidad
+        (lugar_reclutamiento ?u - tipoUnidad ?e - tipoEdificio)
 
         ; No hay ningun edificio en una casilla
         (vacia ?x - casilla)
@@ -49,6 +53,7 @@
             (and
                 (en_un ?u ?x1)
                 (conectado ?x1 ?x2)
+                (libre ?u)
             )
         :effect
             (and
@@ -63,7 +68,6 @@
             (and
                 (en_un ?u ?x)
                 (libre ?u)
-                (nodo_recurso Gas ?x)
                 (en_ed ?e ?x)
                 (esTipo_e ?e Extractor)
             )
@@ -92,14 +96,18 @@
     )
 
     (:action construir
-        :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla ?r - recurso)
+        :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla)
         :precondition
             (and
                 (en_un ?u ?x)
                 (libre ?u)
                 (esTipo_e ?e ?t)
-                (recurso_edificio ?r ?t)
-                (disponible ?r)
+                (forall (?r - recurso)
+                    (or
+                        (not (recurso_edificio ?r ?t))
+                        (disponible ?r)
+                    )
+                )
                 (vacia ?x)
             )
         :effect
@@ -124,6 +132,32 @@
             (and
                 (en_ed ?e ?x)
                 (not (vacia ?x))
+            )
+    )
+
+    (:action reclutar
+        :parameters (?u - unidad ?tu - tipoUnidad  ?x - casilla ?e - edificio ?t - tipoEdificio)
+        :precondition
+            (and
+                (esTipo_u ?u ?tu)
+                (forall (?r - recurso)
+                    (or
+                        (not (recurso_unidad ?r ?tu))
+                        (disponible ?r)
+                    )
+                )
+                (en_ed ?e ?x)
+                (esTipo_e ?e ?t)
+                (lugar_reclutamiento ?tu ?t)
+                ; No puede existir ya la unidad
+                (not (exists (?x_aux - casilla) 
+                    (en_un ?u ?x_aux)
+                ))
+            )
+        :effect
+            (and
+                (en_un ?u ?x)
+                (libre ?u)
             )
     )
     

@@ -33,6 +33,9 @@
         ; Indicar si un vce está extrayendo un recurso
         (extrayendo ?u - unidad ?r - recurso)
 
+        ; Indicar que un recurso está disponible
+        (disponible ?r - recurso)
+
         ; Minerales para cada edificio
         (recurso_edificio ?r - recurso ?e - tipoEdificio)
 
@@ -66,6 +69,7 @@
             (and
                 (not (libre ?u))
                 (extrayendo ?u ?r)
+                (disponible ?r)
             )
     )
 
@@ -77,7 +81,7 @@
                 (libre ?u)
                 (esTipo_e ?e ?t)
                 (recurso_edificio ?r ?t)
-                (extrayendo ?u_ext ?r)
+                (disponible ?r)
                 (vacia ?x)
             )
         :effect
