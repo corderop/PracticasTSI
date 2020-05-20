@@ -97,6 +97,19 @@
                 (esTipo_e ?e ?t)
                 (recurso_edificio ?r ?t)
                 (disponible ?r)
+                ; Compruebo que no se construya un extractor 
+                ; cuando no es un nodo de Gas y compruebo que si
+                ; es un nodo de gas no se pueda construir otra cosa
+                (or
+                    (and
+                        (esTipo_e ?e Extractor)
+                        (nodo_recurso Gas ?x)
+                    )
+                    (and
+                        (not (esTipo_e ?e Extractor))
+                        (not (nodo_recurso Gas ?x))
+                    )
+                )
                 (vacia ?x)
                 ; No construye dos veces el mismo edificio
                 (not (exists (?x_aux - casilla) 
