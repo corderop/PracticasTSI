@@ -39,7 +39,7 @@
         (= (coste_u Gas Segador) 50)
 
         (= (coste_i Minerales ImpulsorSegador) 50)
-        (= (coste_i Gas ImpulsorSegador) 100)
+        (= (coste_i Gas ImpulsorSegador) 200)
 
         (lugar_reclutamiento VCE CentroDeMando)
         (lugar_reclutamiento Marine Barracones)
@@ -61,18 +61,16 @@
         (esTipo_e extractor1 Extractor)
         (esTipo_e bdi1 BahiaDeIngenieria)
         (esTipo_e d1 Deposito)
-        ; (esTipo_e d2 Deposito)
-        ; (esTipo_e d3 Deposito)
 
         ; Declaro posiciones
-        (en_un vce1 T3_4)
+        (en_un vce1 T3_1)
         (en_ed centrodemando1 T4_4)
         (en_ed bdi1 T5_4)
         (nodo_recurso Minerales T2_1)
         (nodo_recurso Minerales T2_5)
-        (nodo_recurso Minerales T3_2)
-        (nodo_recurso Gas T4_5)
-        (nodo_recurso Gas T5_3)
+        (nodo_recurso Minerales T4_3)
+        (nodo_recurso Gas T1_5)
+        (nodo_recurso Gas T5_2)
 
         ; Ninguna unidad ocupada
         (libre vce1)

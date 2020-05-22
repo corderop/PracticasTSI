@@ -114,11 +114,8 @@
             (and
                 (extrayendo ?u ?r)
                 ; No puede sobrepasar el límite
-                (<=
-                    (+
-                        (cantidad ?r)
-                        10
-                    )
+                (<
+                    (cantidad ?r)
                     (limite ?r)
                 )                
             )
@@ -126,6 +123,11 @@
             (and
                 ; Incrementar gas o minerales
                 (increase (cantidad ?r) 10)
+                (when (and (> (cantidad ?r) (limite ?r)))
+                    (and
+                        (assign (cantidad ?r) (limite ?r))
+                    )
+                )
             )
     )
 
