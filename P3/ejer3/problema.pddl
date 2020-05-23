@@ -1,5 +1,5 @@
-(define (problem ejer1_p)
-    (:domain ejer1)
+(define (problem ejer3_p)
+    (:domain ejer3)
     (:objects
         vce1 - unidad
         vce2 - unidad
@@ -7,13 +7,7 @@
         centrodemando1 barracon1 extractor1 - edificio
     )
     (:init
-        (recurso_edificio Minerales Barracones)
-        (recurso_edificio Minerales CentroDeMando)
-        (recurso_edificio Gas CentroDeMando)
-        (recurso_edificio Minerales Extractor)
-
         (Gas Gas)
-        (Minerales Minerales)
 
         ; Declaro los tipos
         (esTipo_u vce1 VCE)
@@ -33,6 +27,12 @@
         (nodo_recurso Minerales T3_2)
         (nodo_recurso Gas T4_5)
         (nodo_recurso Gas T5_3)
+
+        ; Recursos necesarios para cada edificio
+        (recurso_edificio Minerales Barracones)
+        (recurso_edificio Minerales CentroDeMando)
+        (recurso_edificio Gas CentroDeMando)
+        (recurso_edificio Minerales Extractor)
 
         ; Ninguna unidad ocupada
         (libre vce1)

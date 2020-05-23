@@ -1,5 +1,5 @@
-(define (problem ejer1_p)
-    (:domain ejer1)
+(define (problem ejer2_p)
+    (:domain ejer2)
     (:objects
         vce1 - unidad
         vce2 - unidad

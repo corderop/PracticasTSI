@@ -1,4 +1,4 @@
-(define (domain ejer1)
+(define (domain ejer2)
     (:requirements :strips :typing :adl)
     (:types
         unidad edificio recurso casilla - object
