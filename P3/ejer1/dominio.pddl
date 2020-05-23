@@ -47,12 +47,16 @@
         :parameters (?u - unidad ?x1 - casilla ?x2 - casilla)
         :precondition
             (and
+                ; Posición inicial de la unidad
                 (en_un ?u ?x1)
+                ; La posición inicial está conectada con la de destino
                 (conectado ?x1 ?x2)
             )
         :effect
             (and
+                ; Se elimina la posición antigua
                 (not (en_un ?u ?x1))
+                ; Se añade la posición nueva
                 (en_un ?u ?x2)
             )
     )
@@ -61,14 +65,19 @@
         :parameters (?u - unidad ?r - recurso ?x - casilla)
         :precondition
             (and
+                ; Está en la misma casilla que el nodo de recurso
                 (en_un ?u ?x)
-                (libre ?u)
                 (nodo_recurso ?r ?x)
+                ; Está libre la unidad
+                (libre ?u)
             )
         :effect
             (and
+                ; La unidad deja de estar libre
                 (not (libre ?u))
+                ; Pasa a estar extrayendo el recurso
                 (extrayendo ?u ?r)
+                ; Como está extrayendo el recurso este se puede usar
                 (disponible ?r)
             )
     )
@@ -77,11 +86,15 @@
         :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla ?r - recurso)
         :precondition
             (and
+                ; Está en la posición que se va a construir el edificio
                 (en_un ?u ?x)
+                ; Está libre la unidad
                 (libre ?u)
+                ; Se esta extrayendo el recurso necesario para el tipo de edificio concreto
                 (esTipo_e ?e ?t)
                 (recurso_edificio ?r ?t)
                 (disponible ?r)
+                ; No hay un edificio construido en esa posición.
                 (vacia ?x)
                 ; No construye dos veces el mismo edificio
                 (not (exists (?x_aux - casilla) 
@@ -90,7 +103,9 @@
             )
         :effect
             (and
+                ; Se crea el edificio en la posición
                 (en_ed ?e ?x)
+                ; Pasa a no estar vacia la posición
                 (not (vacia ?x))
             )
     )

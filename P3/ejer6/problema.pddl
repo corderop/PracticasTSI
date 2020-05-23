@@ -65,7 +65,7 @@
         ; Declaro posiciones
         (en_un vce1 T3_1)
         (en_ed centrodemando1 T4_4)
-        (en_ed bdi1 T5_4)
+        ; (en_ed bdi1 T5_4)
         (nodo_recurso Minerales T2_1)
         (nodo_recurso Minerales T2_5)
         (nodo_recurso Minerales T4_3)
