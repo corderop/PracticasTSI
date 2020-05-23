@@ -50,7 +50,6 @@
 
         ; Comparar recursos
         (Gas ?r - recurso)
-        ; (Minerales ?r - recurso)
 
         ; Comparar tipos de unidades
         (Segador ?tu)
@@ -63,38 +62,48 @@
         :parameters (?u - unidad ?x1 - casilla ?x2 - casilla)
         :precondition
             (and
+                ; Posición inicial de la unidad
                 (en_un ?u ?x1)
+                ; La posición inicial está conectada con la de destino
                 (conectado ?x1 ?x2)
+                ; La unidad debe estar libre
                 (libre ?u)
             )
         :effect
             (and
+                ; Se elimina la posición antigua
                 (not (en_un ?u ?x1))
+                ; Se añade la posición nueva
                 (en_un ?u ?x2)
             )
     )
 
-    (:action asignarNodoRecursos
+    (:action asignar
         :parameters (?u - unidad ?r - recurso ?x - casilla)
-        :precondition 
-            (and 
+        :precondition
+            (and
+                ; Está en la misma casilla que el nodo de recurso
                 (en_un ?u ?x)
-                (libre ?u)
                 (nodo_recurso ?r ?x)
-                ; Si es un nodo de gas debe de haber un extractor
+                ; Está libre la unidad
+                (libre ?u)
+                ; Compruebo que si es gas exista un extractor en el nodo
                 (or
-                    (not (Gas ?r))
-                    (exists (?e - edificio)
+                    (not (Gas ?r)) ; Si se cumple el recurso necesario no es Gas
+                    (exists (?e - edificio) ; Si el recurso es Gas tiene que haber un extractor en la posición
                         (and
                             (en_ed ?e ?x)
                             (esTipo_e ?e Extractor)
                         )
                     )
                 )
+                
             )
-        :effect 
-            (and 
+        :effect
+            (and
+                ; La unidad deja de estar libre
                 (not (libre ?u))
+                ; Pasa a estar extrayendo el recurso
                 (extrayendo ?u ?r)
             )
     )
@@ -103,6 +112,7 @@
         :parameters (?u - unidad ?r - recurso)
         :precondition
             (and
+                ; La unidad debe de estar en un nodo de recurso extrayendo
                 (extrayendo ?u ?r)
                 ; No puede sobrepasar el límite
                 (<
@@ -114,6 +124,7 @@
             (and
                 ; Incrementar gas o minerales
                 (increase (cantidad ?r) 10)
+                ; Si sumar 10 sobrepasa el límite se completa solo hasta llegar a este
                 (when (and (> (cantidad ?r) (limite ?r)))
                     (and
                         (assign (cantidad ?r) (limite ?r))
@@ -140,9 +151,13 @@
         :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla)
         :precondition
             (and
+                ; Está en la posición que se va a construir el edificio
                 (en_un ?u ?x)
+                ; Está libre la unidad
                 (libre ?u)
+                ; Se esta extrayendo el recurso necesario para el tipo de edificio concreto
                 (esTipo_e ?e ?t)
+                ; Comprueba que hay cantidad suficiente de cada recurso
                 (forall (?r - recurso)
                     (and
                         (>=
@@ -164,6 +179,7 @@
                         (not (nodo_recurso Gas ?x))
                     )
                 )
+                ; No hay un edificio construido en esa posición.
                 (vacia ?x)
                 ; No construye dos veces el mismo edificio
                 (not (exists (?x_aux - casilla) 
@@ -172,13 +188,17 @@
             )
         :effect
             (and
+                ; Se crea el edificio en la posición
                 (en_ed ?e ?x)
+                ; Pasa a no estar vacia la posición
                 (not (vacia ?x))
+                ; Reduce la cantidad de cada recurso según el coste
                 (forall (?r - recurso)
                     (and
                         (decrease (cantidad ?r) (coste_e ?r ?t))
                     )
                 )
+                ; Si se ha construido un depósito se aumenta el límite
                 (when (and (esTipo_e ?e Deposito))
                     (and
                         (increase (limite Gas) 100)
@@ -189,10 +209,12 @@
     )
 
     (:action reclutar
-        :parameters (?u - unidad ?tu - tipoUnidad  ?x - casilla ?e - edificio ?t - tipoEdificio)
+        :parameters (?u - unidad ?tu - tipoUnidad  ?x - casilla)
         :precondition
             (and
+                ; Compara que tipo de unidad es
                 (esTipo_u ?u ?tu)
+                ; Comprueba que hay cantidad suficiente de cada recurso
                 (forall (?r - recurso)
                     (and
                         (>=
@@ -201,15 +223,20 @@
                         )
                     )
                 )
-                ; Compruebo si se va a reclutar un segador si está investigado
+                ; Comprueba que la casilla donde la unidad sea creada haya un edificio del tipo 
+                ; que la unidad necesita
+                (exists (?e - edificio ?t - tipoEdificio)
+                    (and
+                        (en_ed ?e ?x)
+                        (esTipo_e ?e ?t)
+                        (lugar_reclutamiento ?tu ?t)
+                    )
+                )
+                ; Compruebo que si se va a reclutar un segador ImpulsorSegador está investigado
                 (or
                     (not (Segador ?tu))
                     (investigado ImpulsorSegador)
-                )   
-
-                (en_ed ?e ?x)
-                (esTipo_e ?e ?t)
-                (lugar_reclutamiento ?tu ?t)
+                ) 
                 ; No puede existir ya la unidad
                 (not (exists (?x_aux - casilla) 
                     (en_un ?u ?x_aux)
@@ -217,8 +244,11 @@
             )
         :effect
             (and
+                ; Se crea la nueva unidad en la casilla
                 (en_un ?u ?x)
+                ; Esta unidad comienza estando libre
                 (libre ?u)
+                ; Reduce la cantidad de cada recurso según el coste
                 (forall (?r - recurso)
                     (and
                         (decrease (cantidad ?r) (coste_u ?r ?tu))
@@ -228,18 +258,17 @@
     )
 
     (:action investigar
-        :parameters ( ?i - investigacion ?x - casilla)
+        :parameters ( ?i - investigacion)
         :precondition
             (and
-                ; No puede existir ya la investigacion
-                (not (investigado ?i))
-                (exists (?e - edificio ) 
+                ; Existe la bahía de ingeniería
+                (exists (?e - edificio ?x - casilla ) 
                     (and
                         (en_ed ?e ?x)
                         (esTipo_e ?e BahiaDeIngenieria)
                     )
                 )
-                ; Compruebo que se tienen todos los recursos
+                ; Comprueba que hay cantidad suficiente de cada recurso
                 (forall (?r - recurso)
                     (and
                         (>=
@@ -248,10 +277,14 @@
                         )
                     )
                 )
+                ; Compruebo que no se ha investigado ya
+                (not (investigado ?i))
             )
         :effect
             (and
+                ; Se declara como investigado
                 (investigado ?i)
+                ; Reduce la cantidad de cada recurso según el coste
                 (forall (?r - recurso)
                     (and
                         (decrease (cantidad ?r) (coste_i ?r ?i))

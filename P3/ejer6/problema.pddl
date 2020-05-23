@@ -7,6 +7,9 @@
         centrodemando1 barracon1 extractor1 bdi1 d1 - edificio
     )
     (:init
+        (Gas Gas)
+        (Segador Segador)
+        
         ; Inicializo las funciones
         (= (cantidad Gas) 0)
         (= (cantidad Minerales) 0)
@@ -41,18 +44,8 @@
         (= (coste_i Minerales ImpulsorSegador) 50)
         (= (coste_i Gas ImpulsorSegador) 200)
 
-        (lugar_reclutamiento VCE CentroDeMando)
-        (lugar_reclutamiento Marine Barracones)
-        (lugar_reclutamiento Segador Barracones)
-
-        (Gas Gas)
-        ; (Minerales Minerales)
-
-        (Segador Segador)
-
         ; Declaro los tipos
         (esTipo_u vce1 VCE)
-        ; (esTipo_u vce2 VCE)
         (esTipo_u marine1 Marine)
         (esTipo_u marine2 Marine)
         (esTipo_u segador1 Segador)
@@ -65,12 +58,17 @@
         ; Declaro posiciones
         (en_un vce1 T3_1)
         (en_ed centrodemando1 T4_4)
-        ; (en_ed bdi1 T5_4)
+        (en_ed bdi1 T5_4)
         (nodo_recurso Minerales T2_1)
         (nodo_recurso Minerales T2_5)
         (nodo_recurso Minerales T4_3)
         (nodo_recurso Gas T1_5)
         (nodo_recurso Gas T5_2)
+
+        ; Lugar de reclutamiento para las unidades
+        (lugar_reclutamiento VCE CentroDeMando)
+        (lugar_reclutamiento Marine Barracones)
+        (lugar_reclutamiento Segador Barracones)
 
         ; Ninguna unidad ocupada
         (libre vce1)

@@ -167,15 +167,7 @@
                         (disponible ?r)
                     )
                 )
-                ; Comprueba que la casilla donde la unidad sea creada haya un edificio del tipo 
-                ; que la unidad necesita
-                (exists (?e - edificio ?t - tipoEdificio)
-                    (and
-                        (en_ed ?e ?x)
-                        (esTipo_e ?e ?t)
-                        (lugar_reclutamiento ?tu ?t)
-                    )
-                )
+                
                 ; Compruebo que si se va a reclutar un segador ImpulsorSegador está investigado
                 (or
                     (not (Segador ?tu))
@@ -188,7 +180,9 @@
             )
         :effect
             (and
+                ; Se crea la nueva unidad en la casilla
                 (en_un ?u ?x)
+                ; Esta unidad comienza estando libre
                 (libre ?u)
             )
     )
@@ -211,8 +205,7 @@
                         (disponible ?r)
                     )
                 )
-                ; Compruebo que no se ha investigado ya
-                (not (investigado ?i))
+                
             )
         :effect
             (and
