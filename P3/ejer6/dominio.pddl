@@ -42,15 +42,6 @@
         ; Indicar si un vce está extrayendo un recurso
         (extrayendo ?u - unidad ?r - recurso)
 
-        ; Indicar que un recurso está disponible
-        ; (disponible ?r - recurso)
-
-        ; ; Recursos para cada edificio
-        ; (recurso_edificio ?r - recurso ?e - tipoEdificio)
-        ; ; Recursos para cada unidad
-        ; (recurso_unidad ?r - recurso ?u - tipoUnidad)
-        ; ; Recurso para una investigación
-        ; (recurso_investigacion ?r - recurso ?i - investigacion)
         ; Donde se recluta cada unidad
         (lugar_reclutamiento ?u - tipoUnidad ?e - tipoEdificio)
 
