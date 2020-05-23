@@ -61,7 +61,7 @@
             )
     )
 
-    (:action obtenerRecurso
+    (:action asignar
         :parameters (?u - unidad ?r - recurso ?x - casilla)
         :precondition
             (and

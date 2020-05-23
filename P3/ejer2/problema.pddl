@@ -7,12 +7,7 @@
         centrodemando1 barracon1 extractor1 - edificio
     )
     (:init
-        (recurso_edificio Minerales Barracones)
-        (recurso_edificio Gas CentroDeMando)
-        (recurso_edificio Minerales Extractor)
-
         (Gas Gas)
-        (Minerales Minerales)
 
         ; Declaro los tipos
         (esTipo_u vce1 VCE)
@@ -32,6 +27,11 @@
         (nodo_recurso Minerales T3_2)
         (nodo_recurso Gas T4_5)
         (nodo_recurso Gas T5_3)
+
+        ; Recursos necesarios para cada edificio
+        (recurso_edificio Minerales Barracones)
+        (recurso_edificio Gas CentroDeMando)
+        (recurso_edificio Minerales Extractor)
 
         ; Ninguna unidad ocupada
         (libre vce1)
