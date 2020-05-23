@@ -1,5 +1,5 @@
-(define (problem ejer1_p)
-    (:domain ejer1)
+(define (problem ejer4_p)
+    (:domain ejer4)
     (:objects
         vce1 vce2 - unidad
         marine1 marine2 - unidad
@@ -7,22 +7,7 @@
         centrodemando1 barracon1 extractor1 - edificio
     )
     (:init
-        (recurso_edificio Minerales Barracones)
-        (recurso_edificio Minerales CentroDeMando)
-        (recurso_edificio Gas CentroDeMando)
-        (recurso_edificio Minerales Extractor)
-
-        (recurso_unidad Minerales Marine)
-        (recurso_unidad Minerales VCE)
-        (recurso_unidad Gas Segador)
-        (recurso_unidad Minerales Segador)
-
-        (lugar_reclutamiento VCE CentroDeMando)
-        (lugar_reclutamiento Marine Barracones)
-        (lugar_reclutamiento Segador Barracones)
-
         (Gas Gas)
-        (Minerales Minerales)
 
         ; Declaro los tipos
         (esTipo_u vce1 VCE)
@@ -35,13 +20,30 @@
         (esTipo_e extractor1 Extractor)
 
         ; Declaro posiciones
-        (en_un vce1 T3_4)
+        (en_un vce1 T3_1)
         (en_ed centrodemando1 T4_4)
         (nodo_recurso Minerales T2_1)
         (nodo_recurso Minerales T2_5)
-        (nodo_recurso Minerales T3_2)
-        (nodo_recurso Gas T4_5)
-        (nodo_recurso Gas T5_3)
+        (nodo_recurso Minerales T4_3)
+        (nodo_recurso Gas T1_5)
+        (nodo_recurso Gas T5_2)
+
+        ; Recursos necesarios para los edificios
+        (recurso_edificio Minerales Barracones)
+        (recurso_edificio Minerales CentroDeMando)
+        (recurso_edificio Gas CentroDeMando)
+        (recurso_edificio Minerales Extractor)
+
+        ; Recursos necesarios para las unidades
+        (recurso_unidad Minerales Marine)
+        (recurso_unidad Minerales VCE)
+        (recurso_unidad Gas Segador)
+        (recurso_unidad Minerales Segador)
+
+        ; Lugar de reclutamiento para las unidades
+        (lugar_reclutamiento VCE CentroDeMando)
+        (lugar_reclutamiento Marine Barracones)
+        (lugar_reclutamiento Segador Barracones)
 
         ; Ninguna unidad ocupada
         (libre vce1)

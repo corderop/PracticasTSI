@@ -54,6 +54,8 @@
                 (en_un ?u ?x1)
                 ; La posición inicial está conectada con la de destino
                 (conectado ?x1 ?x2)
+                ; La unidad debe estar libre
+                (libre ?u)
             )
         :effect
             (and

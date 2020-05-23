@@ -18,15 +18,15 @@
         (esTipo_e extractor1 Extractor)
 
         ; Declaro posiciones
-        (en_un vce1 T1_2)
-        (en_un vce2 T1_5)
-        (en_un vce3 T3_1)
+        (en_un vce1 T3_1)
+        (en_un vce2 T1_4)
+        (en_un vce3 T3_3)
         (en_ed centrodemando1 T4_4)
         (nodo_recurso Minerales T2_1)
         (nodo_recurso Minerales T2_5)
-        (nodo_recurso Minerales T3_2)
-        (nodo_recurso Gas T4_5)
-        (nodo_recurso Gas T5_3)
+        (nodo_recurso Minerales T4_3)
+        (nodo_recurso Gas T1_5)
+        (nodo_recurso Gas T5_2)
 
         ; Recursos necesarios para cada edificio
         (recurso_edificio Minerales Barracones)

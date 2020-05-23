@@ -51,7 +51,6 @@
 
         ; Comparar recursos
         (Gas ?r - recurso)
-        (Minerales ?r - recurso)
 
         ; Comparar tipos de unidades
         (Segador ?tu)

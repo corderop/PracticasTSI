@@ -1,4 +1,4 @@
-(define (domain ejer1)
+(define (domain ejer4)
     (:requirements :strips :typing :adl :fluents)
     (:types
         unidad edificio recurso casilla - object
@@ -48,46 +48,56 @@
 
         ; Comparar recursos
         (Gas ?r - recurso)
-        (Minerales ?r - recurso)
     )
     
     (:action navegar
         :parameters (?u - unidad ?x1 - casilla ?x2 - casilla)
         :precondition
             (and
+                ; Posición inicial de la unidad
                 (en_un ?u ?x1)
+                ; La posición inicial está conectada con la de destino
                 (conectado ?x1 ?x2)
+                ; La unidad debe estar libre
                 (libre ?u)
             )
         :effect
             (and
+                ; Se elimina la posición antigua
                 (not (en_un ?u ?x1))
+                ; Se añade la posición nueva
                 (en_un ?u ?x2)
             )
     )
 
-    (:action obtenerRecurso
+    (:action asignar
         :parameters (?u - unidad ?r - recurso ?x - casilla)
         :precondition
             (and
+                ; Está en la misma casilla que el nodo de recurso
                 (en_un ?u ?x)
-                (libre ?u)
                 (nodo_recurso ?r ?x)
+                ; Está libre la unidad
+                (libre ?u)
                 ; Compruebo que si es gas exista un extractor en el nodo
                 (or
-                    (not (Gas ?r))
-                    (exists (?e - edificio)
+                    (not (Gas ?r)) ; Si se cumple el recurso necesario no es Gas
+                    (exists (?e - edificio) ; Si el recurso es Gas tiene que haber un extractor en la posición
                         (and
                             (en_ed ?e ?x)
                             (esTipo_e ?e Extractor)
                         )
                     )
-                )    
+                )
+                
             )
         :effect
             (and
+                ; La unidad deja de estar libre
                 (not (libre ?u))
+                ; Pasa a estar extrayendo el recurso
                 (extrayendo ?u ?r)
+                ; Como está extrayendo el recurso este se puede usar
                 (disponible ?r)
             )
     )
@@ -96,9 +106,13 @@
         :parameters (?u - unidad ?e - edificio ?t - tipoEdificio ?x - casilla)
         :precondition
             (and
+                ; Está en la posición que se va a construir el edificio
                 (en_un ?u ?x)
+                ; Está libre la unidad
                 (libre ?u)
+                ; Se esta extrayendo el recurso necesario para el tipo de edificio concreto
                 (esTipo_e ?e ?t)
+                ; Comprueba para todos los recursos cuales son los necesarios y si están disponibles
                 (forall (?r - recurso)
                     (or
                         (not (recurso_edificio ?r ?t))
@@ -113,11 +127,9 @@
                         (esTipo_e ?e Extractor)
                         (nodo_recurso Gas ?x)
                     )
-                    (and
-                        (not (esTipo_e ?e Extractor))
-                        (not (nodo_recurso Gas ?x))
-                    )
+                    (not (esTipo_e ?e Extractor))
                 )
+                ; No hay un edificio construido en esa posición.
                 (vacia ?x)
                 ; No construye dos veces el mismo edificio
                 (not (exists (?x_aux - casilla) 
@@ -126,25 +138,35 @@
             )
         :effect
             (and
+                ; Se crea el edificio en la posición
                 (en_ed ?e ?x)
+                ; Pasa a no estar vacia la posición
                 (not (vacia ?x))
             )
     )
 
     (:action reclutar
-        :parameters (?u - unidad ?tu - tipoUnidad  ?x - casilla ?e - edificio ?t - tipoEdificio)
+        :parameters (?u - unidad ?tu - tipoUnidad  ?x - casilla)
         :precondition
             (and
+                ; Compara que tipo de unidad es
                 (esTipo_u ?u ?tu)
+                ; Comprueba para todos los recursos cuales son los necesarios y si están disponibles
                 (forall (?r - recurso)
                     (or
                         (not (recurso_unidad ?r ?tu))
                         (disponible ?r)
                     )
                 )
-                (en_ed ?e ?x)
-                (esTipo_e ?e ?t)
-                (lugar_reclutamiento ?tu ?t)
+                ; Comprueba que la casilla donde la unidad sea creada haya un edificio del tipo 
+                ; que la unidad necesita
+                (exists (?e - edificio ?t - tipoEdificio)
+                    (and
+                        (en_ed ?e ?x)
+                        (esTipo_e ?e ?t)
+                        (lugar_reclutamiento ?tu ?t)
+                    )
+                )
                 ; No puede existir ya la unidad
                 (not (exists (?x_aux - casilla) 
                     (en_un ?u ?x_aux)
@@ -152,7 +174,9 @@
             )
         :effect
             (and
+                ; Se crea la nueva unidad en la casilla
                 (en_un ?u ?x)
+                ; Esta unidad comienza estando libre
                 (libre ?u)
             )
     )

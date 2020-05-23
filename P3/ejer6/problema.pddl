@@ -196,8 +196,6 @@
             (en_un marine1 T5_1)
             (en_un marine2 T4_2)
             (en_un segador1 T4_2)
-            ; (investigado ImpulsorSegador)
-            ; (en_ed bdi1 T4_2)
         )
     )
 )
